@@ -108,6 +108,25 @@ python run.py
 
 التطبيق سيكون متاحاً على: The application will be available at: `http://localhost:5000`
 
+## الأمان والنشر - Security and Deployment
+
+⚠️ **ملاحظة أمنية مهمة / Important Security Note**:
+- التطبيق مُعد للتطوير والتعلم / This application is configured for development and learning
+- لا تستخدم `debug=True` في بيئة الإنتاج / Never use `debug=True` in production
+- للنشر في الإنتاج، استخدم خادم WSGI مثل Gunicorn أو uWSGI / For production deployment, use a WSGI server like Gunicorn or uWSGI
+- غيّر `SECRET_KEY` إلى قيمة سرية قوية / Change `SECRET_KEY` to a strong secret value
+- استخدم قاعدة بيانات إنتاجية مثل PostgreSQL أو MySQL / Use a production database like PostgreSQL or MySQL
+
+### نشر الإنتاج - Production Deployment
+
+```bash
+# Install production server
+pip install gunicorn
+
+# Run with gunicorn
+gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app('production')"
+```
+
 ## الاستخدام - Usage
 
 ### الصفحة الرئيسية - Home Page
