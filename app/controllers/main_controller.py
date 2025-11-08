@@ -1,7 +1,7 @@
 """
 Main controller for home and general pages
 """
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, jsonify
 
 bp = Blueprint('main', __name__)
 
@@ -16,3 +16,9 @@ def index():
 def about():
     """About page"""
     return render_template('about.html')
+
+
+@bp.route('/health')
+def health():
+    """Health check endpoint for monitoring and load balancers"""
+    return jsonify({"status": "ok"}), 200

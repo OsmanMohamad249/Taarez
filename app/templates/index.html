@@ -38,4 +38,25 @@
         </div>
     </div>
 </div>
+
+<div class="api-section">
+    <h2>🔌 API & System Status</h2>
+    <div class="api-grid">
+        <div class="api-card">
+            <h3>Health Check</h3>
+            <p>Monitor system health and readiness</p>
+            <a href="{{ url_for('main.health') }}" class="btn btn-link" target="_blank">View Health Status →</a>
+        </div>
+        <div class="api-card">
+            <h3>Backend API</h3>
+            <p>Node.js REST API for mobile apps</p>
+            <a href="http://localhost:8080/api" class="btn btn-link" target="_blank">API Documentation →</a>
+        </div>
+        <div class="api-card">
+            <h3>AI Service</h3>
+            <p>AI-powered measurement service</p>
+            <a href="http://localhost:8000" class="btn btn-link" target="_blank">AI Service →</a>
+        </div>
+    </div>
+</div>
 {% endblock %}
