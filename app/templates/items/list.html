@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}العناصر - Items | طراز Tiraz{% endblock %}
+
+{% block content %}
+<div class="items-page">
+    <div class="page-header">
+        <h1>العناصر / Items</h1>
+        <a href="{{ url_for('items.create_item') }}" class="btn btn-primary">إضافة عنصر جديد / Add New Item</a>
+    </div>
+
+    {% if items %}
+        <div class="items-grid">
+            {% for item in items %}
+                <div class="item-card">
+                    <h3>{{ item.name }}</h3>
+                    {% if item.style %}
+                        <span class="item-style">{{ item.style }}</span>
+                    {% endif %}
+                    {% if item.description %}
+                        <p class="item-description">{{ item.description[:100] }}{% if item.description|length > 100 %}...{% endif %}</p>
+                    {% endif %}
+                    <div class="item-actions">
+                        <a href="{{ url_for('items.view_item', item_id=item.id) }}" class="btn btn-small">عرض / View</a>
+                        <a href="{{ url_for('items.edit_item', item_id=item.id) }}" class="btn btn-small btn-secondary">تعديل / Edit</a>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="empty-state">
+            <p>لا توجد عناصر حالياً / No items yet</p>
+            <a href="{{ url_for('items.create_item') }}" class="btn btn-primary">إضافة عنصر أول / Add First Item</a>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+
+{% block title %}تعديل - Edit {{ item.name }} | طراز Tiraz{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h1>تعديل العنصر / Edit Item</h1>
+    
+    <form method="POST" class="item-form">
+        <div class="form-group">
+            <label for="name">الاسم / Name *</label>
+            <input type="text" id="name" name="name" value="{{ item.name }}" required>
+        </div>
+
+        <div class="form-group">
+            <label for="style">النمط / Style</label>
+            <input type="text" id="style" name="style" value="{{ item.style or '' }}" placeholder="Modern, Classic, Minimal, etc.">
+        </div>
+
+        <div class="form-group">
+            <label for="description">الوصف / Description</label>
+            <textarea id="description" name="description" rows="5">{{ item.description or '' }}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">تحديث / Update</button>
+            <a href="{{ url_for('items.view_item', item_id=item.id) }}" class="btn btn-secondary">إلغاء / Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

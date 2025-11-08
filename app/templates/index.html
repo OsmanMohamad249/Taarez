@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}الرئيسية - Home | طراز Tiraz{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>مرحباً بك في تطبيق طراز</h1>
+    <h2>Welcome to Tiraz Application</h2>
+    <p class="hero-description">
+        تطبيق نموذجي متكامل لإدارة العناصر والأنماط
+        <br>
+        A complete model application for managing items and styles
+    </p>
+    <div class="hero-actions">
+        <a href="{{ url_for('items.list_items') }}" class="btn btn-primary">عرض العناصر / View Items</a>
+        <a href="{{ url_for('items.create_item') }}" class="btn btn-secondary">إضافة عنصر / Add Item</a>
+    </div>
+</div>
+
+<div class="features">
+    <h2>المميزات / Features</h2>
+    <div class="feature-grid">
+        <div class="feature-card">
+            <h3>📦 إدارة العناصر</h3>
+            <p>Create, read, update, and delete items</p>
+        </div>
+        <div class="feature-card">
+            <h3>🎨 الأنماط والتصاميم</h3>
+            <p>Organize items by style and design</p>
+        </div>
+        <div class="feature-card">
+            <h3>💾 قاعدة البيانات</h3>
+            <p>SQLAlchemy database integration</p>
+        </div>
+        <div class="feature-card">
+            <h3>🌐 واجهة حديثة</h3>
+            <p>Responsive bilingual interface</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}حول - About | طراز Tiraz{% endblock %}
+
+{% block content %}
+<div class="about-page">
+    <h1>حول تطبيق طراز</h1>
+    <h2>About Tiraz Application</h2>
+    
+    <div class="about-content">
+        <section class="about-section">
+            <h3>ما هو طراز؟ / What is Tiraz?</h3>
+            <p>
+                طراز هو تطبيق ويب نموذجي متكامل مبني باستخدام Flask وPython.
+                يوفر التطبيق نظاماً لإدارة العناصر مع إمكانية تصنيفها حسب الأنماط.
+            </p>
+            <p>
+                Tiraz is a complete model web application built with Flask and Python.
+                The application provides a system for managing items with the ability to categorize them by styles.
+            </p>
+        </section>
+
+        <section class="about-section">
+            <h3>التقنيات المستخدمة / Technologies Used</h3>
+            <ul class="tech-list">
+                <li>Flask - Python web framework</li>
+                <li>SQLAlchemy - Database ORM</li>
+                <li>HTML/CSS/JavaScript</li>
+                <li>SQLite Database</li>
+            </ul>
+        </section>
+
+        <section class="about-section">
+            <h3>الهيكل المعماري / Architecture</h3>
+            <p>
+                يتبع التطبيق نمط MVC (Model-View-Controller) لتنظيم الكود وسهولة الصيانة.
+            </p>
+            <p>
+                The application follows the MVC (Model-View-Controller) pattern for code organization and maintainability.
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %}

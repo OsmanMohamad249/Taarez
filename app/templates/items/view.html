@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }} | طراز Tiraz{% endblock %}
+
+{% block content %}
+<div class="item-detail">
+    <div class="page-header">
+        <h1>{{ item.name }}</h1>
+        <div class="item-actions">
+            <a href="{{ url_for('items.edit_item', item_id=item.id) }}" class="btn btn-secondary">تعديل / Edit</a>
+            <form method="POST" action="{{ url_for('items.delete_item', item_id=item.id) }}" style="display: inline;">
+                <button type="submit" class="btn btn-danger" onclick="return confirm('هل أنت متأكد من الحذف؟ / Are you sure you want to delete?')">حذف / Delete</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="item-info">
+        {% if item.style %}
+            <div class="info-row">
+                <strong>النمط / Style:</strong>
+                <span class="item-style">{{ item.style }}</span>
+            </div>
+        {% endif %}
+
+        {% if item.description %}
+            <div class="info-row">
+                <strong>الوصف / Description:</strong>
+                <p>{{ item.description }}</p>
+            </div>
+        {% endif %}
+
+        <div class="info-row">
+            <strong>تاريخ الإنشاء / Created:</strong>
+            <span>{{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else 'N/A' }}</span>
+        </div>
+
+        <div class="info-row">
+            <strong>آخر تحديث / Last Updated:</strong>
+            <span>{{ item.updated_at.strftime('%Y-%m-%d %H:%M') if item.updated_at else 'N/A' }}</span>
+        </div>
+    </div>
+
+    <div class="back-link">
+        <a href="{{ url_for('items.list_items') }}" class="btn">← العودة للقائمة / Back to List</a>
+    </div>
+</div>
+{% endblock %}
