@@ -1,19 +1,27 @@
 // mobile-app/lib/main.dart
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
-  runApp(TirazApp());
+  runApp(
+    ProviderScope(
+      child: TirazApp(),
+    ),
+  );
 }
 
 class TirazApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Tiraz (Flutter Boilerplate)',
-      home: Scaffold(
-        appBar: AppBar(title: Text('Tiraz - Home')),
-        body: Center(child: Text('Welcome to Tiraz Flutter app (boilerplate)')),
+      title: 'Tiraz',
+      theme: ThemeData(
+        primarySwatch: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
+      home: SplashScreen(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
