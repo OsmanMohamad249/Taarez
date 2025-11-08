@@ -35,7 +35,8 @@ const upload = multer({
  */
 router.post('/upload', upload.array('photos', 4), async (req, res) => {
   try {
-    if (!req.files || req.files.length !== 4) {
+    // Ensure req.files is an array and has exactly 4 items
+    if (!req.files || !Array.isArray(req.files) || req.files.length !== 4) {
       return res.status(400).json({
         status: 'error',
         message: 'Please upload exactly 4 photos (front, back, left, right)',

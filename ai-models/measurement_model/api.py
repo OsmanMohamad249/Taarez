@@ -93,9 +93,11 @@ def process_measurements():
         })
         
     except Exception as e:
+        # Log error for debugging but don't expose stack trace
+        app.logger.error(f'Error processing measurements: {str(e)}')
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': 'Failed to process measurements. Please try again.'
         }), 500
 
 def calculate_measurement(height, weight, body_part):
@@ -151,9 +153,11 @@ def validate_photo():
         })
         
     except Exception as e:
+        # Log error for debugging but don't expose stack trace
+        app.logger.error(f'Error validating photo: {str(e)}')
         return jsonify({
             'status': 'error',
-            'message': str(e)
+            'message': 'Failed to validate photo. Please try again.'
         }), 500
 
 if __name__ == '__main__':
