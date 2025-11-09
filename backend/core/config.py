@@ -26,5 +26,8 @@ class Settings:
     # API
     API_V1_PREFIX: str = "/api/v1"
 
+    # AI Service
+    AI_SERVICE_URL: str = os.getenv("AI_SERVICE_URL", "http://ai-model:8001")
+
 
 settings = Settings()

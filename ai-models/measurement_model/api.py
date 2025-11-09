@@ -1,37 +1,52 @@
 #!/usr/bin/env python3
 """
 Tiraz AI Measurement Service
-Flask API for body measurement extraction from photos
+FastAPI API for body measurement extraction from photos
 """
 
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from typing import List
 import os
 from dotenv import load_dotenv
 
 # Load environment variables
 load_dotenv()
 
-app = Flask(__name__)
-CORS(app)
+app = FastAPI(title="Tiraz AI Measurement Service", version="1.0.0")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Configuration
 UPLOAD_FOLDER = 'data/input'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max
+MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
-@app.route('/health', methods=['GET'])
-def health_check():
+@app.get('/health')
+async def health_check():
     """Health check endpoint"""
-    return jsonify({
+    return {
         'status': 'healthy',
         'service': 'Tiraz AI Measurement Service',
         'version': '1.0.0'
-    })
+    }
 
-@app.route('/api/measurements/process', methods=['POST'])
-def process_measurements():
+@app.post('/api/measurements/process')
+async def process_measurements(
+    photo_front: UploadFile = File(...),
+    photo_back: UploadFile = File(...),
+    photo_left: UploadFile = File(...),
+    photo_right: UploadFile = File(...),
+    height: float = Form(...),
+    weight: float = Form(...)
+):
     """
     Process body measurements from uploaded photos
     
@@ -44,24 +59,23 @@ def process_measurements():
     - weight: number (kg)
     """
     try:
-        # Validate files
-        required_photos = ['photo_front', 'photo_back', 'photo_left', 'photo_right']
-        for photo_key in required_photos:
-            if photo_key not in request.files:
-                return jsonify({
-                    'status': 'error',
-                    'message': f'Missing {photo_key}'
-                }), 400
+        # Validate files are images
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
+        photos = [photo_front, photo_back, photo_left, photo_right]
         
-        # Get height and weight
-        height = request.form.get('height', type=float)
-        weight = request.form.get('weight', type=float)
+        for photo in photos:
+            if photo.content_type not in allowed_types:
+                raise HTTPException(
+                    status_code=400,
+                    detail=f'Invalid file type for {photo.filename}. Only JPEG and PNG are allowed.'
+                )
         
-        if not height or not weight:
-            return jsonify({
-                'status': 'error',
-                'message': 'Height and weight are required'
-            }), 400
+        # Validate height and weight
+        if height <= 0 or weight <= 0:
+            raise HTTPException(
+                status_code=400,
+                detail='Height and weight must be positive numbers'
+            )
         
         # TODO: Implement actual AI processing
         # For MVP, return mock measurements
@@ -81,7 +95,7 @@ def process_measurements():
             'hip': calculate_measurement(height, weight, 'hip'),
         }
         
-        return jsonify({
+        return {
             'status': 'success',
             'data': {
                 'measurements': measurements,
@@ -90,17 +104,19 @@ def process_measurements():
                 'height': height,
                 'weight': weight
             }
-        })
+        }
         
+    except HTTPException:
+        raise
     except Exception as e:
         # Log error for debugging but don't expose stack trace
-        app.logger.error(f'Error processing measurements: {str(e)}')
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to process measurements. Please try again.'
-        }), 500
+        print(f'Error processing measurements: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail='Failed to process measurements. Please try again.'
+        )
 
-def calculate_measurement(height, weight, body_part):
+def calculate_measurement(height: float, weight: float, body_part: str) -> float:
     """
     Calculate body measurements based on height and weight
     This is a simplified algorithm for MVP
@@ -125,17 +141,19 @@ def calculate_measurement(height, weight, body_part):
     
     return round(adjusted, 1)
 
-@app.route('/api/measurements/validate', methods=['POST'])
-def validate_photo():
+@app.post('/api/measurements/validate')
+async def validate_photo(photo: UploadFile = File(...)):
     """
     Validate if photo is suitable for measurement extraction
     """
     try:
-        if 'photo' not in request.files:
-            return jsonify({
-                'status': 'error',
-                'message': 'No photo provided'
-            }), 400
+        # Validate file type
+        allowed_types = ['image/jpeg', 'image/png', 'image/jpg']
+        if photo.content_type not in allowed_types:
+            raise HTTPException(
+                status_code=400,
+                detail='Invalid file type. Only JPEG and PNG are allowed.'
+            )
         
         # TODO: Implement photo validation
         # - Check image quality
@@ -143,28 +161,29 @@ def validate_photo():
         # - Check pose is correct
         # - Verify lighting conditions
         
-        return jsonify({
+        return {
             'status': 'success',
             'data': {
                 'valid': True,
                 'quality_score': 0.85,
                 'suggestions': []
             }
-        })
+        }
         
+    except HTTPException:
+        raise
     except Exception as e:
         # Log error for debugging but don't expose stack trace
-        app.logger.error(f'Error validating photo: {str(e)}')
-        return jsonify({
-            'status': 'error',
-            'message': 'Failed to validate photo. Please try again.'
-        }), 500
+        print(f'Error validating photo: {str(e)}')
+        raise HTTPException(
+            status_code=500,
+            detail='Failed to validate photo. Please try again.'
+        )
 
 if __name__ == '__main__':
-    port = int(os.getenv('PORT', 8000))
-    debug = os.getenv('DEBUG', 'False') == 'True'
+    import uvicorn
+    port = int(os.getenv('PORT', 8001))
     
     print(f"🚀 Starting Tiraz AI Measurement Service on port {port}")
-    print(f"📍 Debug mode: {debug}")
     
-    app.run(host='0.0.0.0', port=port, debug=debug)
+    uvicorn.run(app, host='0.0.0.0', port=port)

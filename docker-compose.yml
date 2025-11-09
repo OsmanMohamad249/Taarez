@@ -10,10 +10,37 @@ services:
       - PYTHONUNBUFFERED=1
       - DATABASE_URL=postgresql://tiraz:tiraz_password@postgres:5432/tiraz_db
       - SECRET_KEY=your-super-secret-jwt-key-change-this-in-production-make-it-long-and-random
+      - AI_SERVICE_URL=http://ai-model:8001
     volumes:
       - ./backend:/app
+      - upload-data:/app/uploads
     depends_on:
       - postgres
+      - ai-model
+
+  ai-model:
+    build:
+      context: ./ai-models
+      dockerfile: Dockerfile
+    ports:
+      - "8001:8001"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PORT=8001
+    volumes:
+      - ./ai-models:/app
+      - ai-data:/app/data
+
+  flutter-dev:
+    build:
+      context: ./mobile-app
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./mobile-app:/app
+    stdin_open: true
+    tty: true
 
   postgres:
     image: postgres:15
@@ -28,3 +55,5 @@ services:
 
 volumes:
   postgres-data:
+  upload-data:
+  ai-data:

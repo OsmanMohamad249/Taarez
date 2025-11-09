@@ -21,7 +21,7 @@ COPY . .
 RUN mkdir -p data/input data/output
 
 # Expose port
-EXPOSE 8000
+EXPOSE 8001
 
 # Start the application
-CMD ["python", "measurement_model/api.py"]
+CMD ["uvicorn", "measurement_model.api:app", "--host", "0.0.0.0", "--port", "8001"]
