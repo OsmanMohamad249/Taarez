@@ -6,10 +6,10 @@ from api.v1.api import api_router
 
 app = FastAPI(title="Tiraz Backend (FastAPI)")
 
-# Configure CORS
+# Configure CORS with settings from environment
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify allowed origins
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

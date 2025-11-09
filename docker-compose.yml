@@ -7,9 +7,10 @@ services:
       - "8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
-      - DATABASE_URL=postgresql://tiraz:tiraz_password@postgres:5432/tiraz_db
-      - SECRET_KEY=your-super-secret-jwt-key-change-this-in-production-make-it-long-and-random
-      - AI_SERVICE_URL=http://ai-models:8000
+      - DATABASE_URL=${DATABASE_URL:-postgresql://tiraz:tiraz_password@postgres:5432/tiraz_db}
+      - SECRET_KEY=${SECRET_KEY:?SECRET_KEY must be set in environment}
+      - AI_SERVICE_URL=${AI_SERVICE_URL:-http://ai-models:8000}
+      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost:3000,http://localhost:8080}
     volumes:
       - ./backend:/app
       - upload-data:/app/uploads
@@ -44,9 +45,9 @@ services:
   postgres:
     image: postgres:15
     environment:
-      POSTGRES_USER: tiraz
-      POSTGRES_PASSWORD: tiraz_password
-      POSTGRES_DB: tiraz_db
+      POSTGRES_USER: ${POSTGRES_USER:-tiraz}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-tiraz_password}
+      POSTGRES_DB: ${POSTGRES_DB:-tiraz_db}
     ports:
       - "5432:5432"
     volumes:
