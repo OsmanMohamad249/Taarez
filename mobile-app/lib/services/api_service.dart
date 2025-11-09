@@ -1,17 +1,12 @@
 // lib/services/api_service.dart
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:http/http.dart' as http;
+import '../utils/app_config.dart';
 
 /// Base API service configuration
 class ApiService {
-  // Base API configuration
-  static const String baseUrl = 'http://10.0.2.2:8000'; // Android emulator
-  // For iOS simulator use: 'http://localhost:8000'
-  // For physical device use: 'http://YOUR_MACHINE_IP:8000'
-  
-  static const String apiV1Prefix = '/api/v1';
-  
-  static String get apiBaseUrl => '$baseUrl$apiV1Prefix';
+  // Use AppConfig for dynamic environment-based configuration
+  static String get apiBaseUrl => AppConfig.apiUrl;
   
   final storage = const FlutterSecureStorage();
   

@@ -2,11 +2,11 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import '../utils/app_config.dart';
 
 class AuthService {
-  // Use localhost for Android emulator, 10.0.2.2 or your machine IP for physical device
-  // For iOS simulator, use localhost
-  static const String baseUrl = 'http://10.0.2.2:8000/api/v1';
+  // Use AppConfig for dynamic environment-based configuration
+  static String get baseUrl => AppConfig.apiUrl;
   
   final storage = const FlutterSecureStorage();
   
