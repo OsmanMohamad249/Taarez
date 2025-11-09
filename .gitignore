@@ -56,6 +56,11 @@ node_modules/
 npm-debug.log
 yarn-error.log
 
+# Next.js
+admin-portal/.next/
+admin-portal/out/
+admin-portal/.vercel
+
 # Mobile app specific
 mobile-app/android/app/build/
 mobile-app/ios/Pods/
