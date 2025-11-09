@@ -15,6 +15,9 @@ sys.path.insert(0, str(backend_dir))
 
 from core.config import settings
 from core.database import Base
+from models.roles import UserRole  # noqa: F401
+from models.user import User  # noqa: F401
+from models.measurement import Measurement  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

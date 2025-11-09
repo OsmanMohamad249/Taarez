@@ -33,6 +33,8 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
         hashed_password=hashed_pwd,
         first_name=user_data.first_name,
         last_name=user_data.last_name,
+        role=user_data.role,
+        is_superuser=False,
     )
 
     db.add(new_user)

@@ -7,6 +7,8 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
+from models.roles import UserRole
+
 
 class UserRegister(BaseModel):
     """Schema for user registration."""
@@ -15,6 +17,7 @@ class UserRegister(BaseModel):
     password: str
     first_name: Optional[str] = None
     last_name: Optional[str] = None
+    role: UserRole = UserRole.CUSTOMER
 
 
 class UserLogin(BaseModel):
@@ -39,6 +42,8 @@ class UserResponse(BaseModel):
     first_name: Optional[str] = None
     last_name: Optional[str] = None
     is_active: bool
+    is_superuser: bool
+    role: UserRole
     created_at: datetime
 
     class Config:

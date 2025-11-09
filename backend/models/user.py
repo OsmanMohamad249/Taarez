@@ -4,11 +4,12 @@ User model.
 
 import uuid
 
-from sqlalchemy import Boolean, Column, DateTime, String
+from sqlalchemy import Boolean, Column, DateTime, String, Enum
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.sql import func
 
 from core.database import Base
+from models.roles import UserRole
 
 
 class User(Base):
@@ -22,6 +23,13 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     is_active = Column(Boolean, default=True, nullable=False)
+    is_superuser = Column(Boolean, default=False, nullable=False)
+    role = Column(
+        Enum(UserRole),
+        nullable=False,
+        default=UserRole.CUSTOMER,
+        server_default=UserRole.CUSTOMER.value,
+    )
     created_at = Column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )
