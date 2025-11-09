@@ -4,7 +4,7 @@ API v1 router.
 
 from fastapi import APIRouter
 
-from api.v1.endpoints import auth, users, measurements
+from api.v1.endpoints import auth, users, measurements, categories, designs
 
 api_router = APIRouter()
 
@@ -13,3 +13,5 @@ api_router.include_router(users.router, prefix="/users", tags=["users"])
 api_router.include_router(
     measurements.router, prefix="/measurements", tags=["measurements"]
 )
+api_router.include_router(categories.router, prefix="/categories", tags=["categories"])
+api_router.include_router(designs.router, prefix="/designs", tags=["designs"])
