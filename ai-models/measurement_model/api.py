@@ -4,7 +4,7 @@ Tiraz AI Measurement Service
 FastAPI API for body measurement extraction from photos
 """
 
-from fastapi import FastAPI, File, UploadFile, Form, HTTPException
+from fastapi import FastAPI, APIRouter, File, UploadFile, Form, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 import os
@@ -13,23 +13,15 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="Tiraz AI Measurement Service", version="1.0.0")
-
-# Configure CORS
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# Create router for measurement endpoints
+router = APIRouter()
 
 # Configuration
 UPLOAD_FOLDER = 'data/input'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
-@app.get('/health')
+@router.get('/health')
 async def health_check():
     """Health check endpoint"""
     return {
@@ -38,7 +30,7 @@ async def health_check():
         'version': '1.0.0'
     }
 
-@app.post('/api/measurements/process')
+@router.post('/api/measurements/process')
 async def process_measurements(
     photo_front: UploadFile = File(...),
     photo_back: UploadFile = File(...),
@@ -141,7 +133,7 @@ def calculate_measurement(height: float, weight: float, body_part: str) -> float
     
     return round(adjusted, 1)
 
-@app.post('/api/measurements/validate')
+@router.post('/api/measurements/validate')
 async def validate_photo(photo: UploadFile = File(...)):
     """
     Validate if photo is suitable for measurement extraction
@@ -180,9 +172,24 @@ async def validate_photo(photo: UploadFile = File(...)):
             detail='Failed to validate photo. Please try again.'
         )
 
+# Create FastAPI app and include router
+app = FastAPI(title="Tiraz AI Measurement Service", version="1.0.0")
+
+# Configure CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include the router
+app.include_router(router)
+
 if __name__ == '__main__':
     import uvicorn
-    port = int(os.getenv('PORT', 8001))
+    port = int(os.getenv('PORT', 8000))
     
     print(f"🚀 Starting Tiraz AI Measurement Service on port {port}")
     
