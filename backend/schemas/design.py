@@ -28,4 +28,4 @@ class Design(DesignBase):
     user_id: UUID
 
     class Config:
-        from_attributes = True
+        orm_mode = True

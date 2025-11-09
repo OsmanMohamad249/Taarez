@@ -19,4 +19,4 @@ class Category(CategoryBase):
     id: UUID
 
     class Config:
-        from_attributes = True
+        orm_mode = True
