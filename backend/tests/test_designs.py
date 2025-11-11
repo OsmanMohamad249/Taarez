@@ -59,15 +59,15 @@ def test_create_design_as_designer():
 
     import time
 
-    design_title = f"Test Design {int(time.time())}"
+    design_name = f"Test Design {int(time.time())}"
 
     response = client.post(
         "/api/v1/designs/",
         json={
-            "title": design_title,
+            "name": design_name,
             "description": "Beautiful test design",
             "style_type": "modern",
-            "price": 99.99,
+            "base_price": 99.99,
         },
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -84,14 +84,14 @@ def test_create_design_as_customer():
 
     import time
 
-    design_title = f"Test Design {int(time.time())}"
+    design_name = f"Test Design {int(time.time())}"
 
     response = client.post(
         "/api/v1/designs/",
         json={
-            "title": design_title,
+            "name": design_name,
             "description": "Test design",
-            "price": 99.99,
+            "base_price": 99.99,
         },
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -104,14 +104,14 @@ def test_create_design_unauthenticated():
     """Test that unauthenticated users cannot create designs."""
     import time
 
-    design_title = f"Test Design {int(time.time())}"
+    design_name = f"Test Design {int(time.time())}"
 
     response = client.post(
         "/api/v1/designs/",
         json={
-            "title": design_title,
+            "name": design_name,
             "description": "Test design",
-            "price": 99.99,
+            "base_price": 99.99,
         },
     )
 
@@ -128,14 +128,14 @@ def test_create_design_with_negative_price():
 
     import time
 
-    design_title = f"Test Design {int(time.time())}"
+    design_name = f"Test Design {int(time.time())}"
 
     response = client.post(
         "/api/v1/designs/",
         json={
-            "title": design_title,
+            "name": design_name,
             "description": "Test design",
-            "price": -10.0,  # Negative price
+            "base_price": -10.0,  # Negative price
         },
         headers={"Authorization": f"Bearer {token}"},
     )
@@ -197,6 +197,39 @@ def test_list_designs_with_active_filter():
     # All designs should be active
     for design in designs:
         assert design.get("is_active") is True
+
+
+def test_get_designer_own_designs():
+    """Test getting a designer's own designs via /designs/me endpoint."""
+    token = _create_user_and_login(UserRole.DESIGNER)
+
+    if not token:
+        return
+
+    response = client.get(
+        "/api/v1/designs/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # Should succeed - designer can access their own designs
+    assert response.status_code == 200
+    assert isinstance(response.json(), list)
+
+
+def test_get_designer_own_designs_as_customer():
+    """Test that customers cannot access /designs/me endpoint."""
+    token = _create_user_and_login(UserRole.CUSTOMER)
+
+    if not token:
+        return
+
+    response = client.get(
+        "/api/v1/designs/me",
+        headers={"Authorization": f"Bearer {token}"},
+    )
+
+    # Should fail - only designers can access this endpoint
+    assert response.status_code == 403
 
 
 def test_update_design_requires_ownership():
