@@ -2,3 +2,7 @@
 /build
 /.dart_tool/
 /.packages
+
+# Generated files
+*.freezed.dart
+*.g.dart

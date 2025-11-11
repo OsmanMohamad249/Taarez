@@ -2,12 +2,13 @@
 /// Application configuration and environment variables
 class AppConfig {
   /// API Base URL
+  /// - For Docker environment: http://backend:8000
   /// - For Android Emulator: http://10.0.2.2:8000
   /// - For iOS Simulator: http://localhost:8000
   /// - For Physical Device: http://YOUR_MACHINE_IP:8000
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://10.0.2.2:8000',
+    defaultValue: 'http://backend:8000',
   );
   
   /// API Version Prefix

@@ -18,9 +18,13 @@ dependencies:
   flutter_secure_storage: ^8.0.0   # Secure token storage (compatible with 2.19)
   dartz: ^0.10.1                   # Functional programming
   intl: ^0.18.1                    # Internationalization
+  freezed_annotation: ^2.2.0       # Code generation for immutable classes
+  json_annotation: ^4.8.0          # JSON serialization annotations
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  build_runner: ^2.3.3  # Compatible with Flutter 2.19
+  build_runner: ^2.3.3             # Code generation runner
+  freezed: ^2.3.2                  # Code generation for data classes
+  json_serializable: ^6.6.0        # JSON serialization code generation

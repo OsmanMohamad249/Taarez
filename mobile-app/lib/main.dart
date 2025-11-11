@@ -1,7 +1,7 @@
 // mobile-app/lib/main.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'screens/auth/splash_screen.dart';
+import 'features/auth/presentation/splash_screen.dart';
 
 void main() {
   runApp(
@@ -20,7 +20,7 @@ class TirazApp extends StatelessWidget {
         primarySwatch: Colors.blue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: SplashScreen(),
+      home: const SplashScreen(),
       debugShowCheckedModeBanner: false,
     );
   }
