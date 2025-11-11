@@ -1,6 +1,6 @@
 // lib/types/index.ts
 /**
- * Shared TypeScript interfaces for the Tiraz admin portal
+ * Shared TypeScript interfaces for the Taarez admin portal
  */
 
 export type UserRole = 'customer' | 'designer' | 'admin' | 'tailor';

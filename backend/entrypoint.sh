@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-echo "Starting Tiraz Backend..."
+echo "Starting Taarez Backend..."
 
 # Wait for PostgreSQL to be ready
 echo "Waiting for PostgreSQL to be ready..."
