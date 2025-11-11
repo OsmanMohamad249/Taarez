@@ -17,7 +17,18 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:
     """
     Hash a password using bcrypt.
+    
+    Note: bcrypt has a maximum password length of 72 bytes.
+    This validation is handled at the schema level (max_length=72 in UserRegister).
     """
+    # Validate password length in bytes (bcrypt limitation)
+    password_bytes = password.encode('utf-8')
+    if len(password_bytes) > 72:
+        raise ValueError(
+            f"Password is too long ({len(password_bytes)} bytes). "
+            "Maximum allowed is 72 bytes. Please use a shorter password."
+        )
+    
     return pwd_context.hash(password)
 
 
