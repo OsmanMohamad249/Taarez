@@ -1,11 +1,11 @@
 #!/bin/bash
-# Tiraz Infrastructure Setup Script
-# This script sets up the development environment for Tiraz
+# Taarez Infrastructure Setup Script
+# This script sets up the development environment for Taarez
 
 set -e
 
 echo "=============================================="
-echo "Tiraz Infrastructure Setup"
+echo "Taarez Infrastructure Setup"
 echo "=============================================="
 echo ""
 

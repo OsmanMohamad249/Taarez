@@ -42,7 +42,7 @@ export default function AdminPage() {
       <header className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-gray-900">
-            Tiraz Admin Portal
+            Taarez Admin Portal
           </h1>
           <div className="flex items-center space-x-4">
             <div className="text-right">
@@ -167,10 +167,10 @@ export default function AdminPage() {
         {/* Welcome Message */}
         <div className="mt-8 bg-white shadow rounded-lg p-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Welcome to Tiraz Admin Portal
+            Welcome to Taarez Admin Portal
           </h2>
           <p className="text-gray-600 mb-4">
-            This is the admin dashboard for managing the Tiraz platform. Here you can:
+            This is the admin dashboard for managing the Taarez platform. Here you can:
           </p>
           <ul className="list-disc list-inside space-y-2 text-gray-600">
             <li>Manage users and their roles</li>

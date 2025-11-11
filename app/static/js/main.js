@@ -1,8 +1,8 @@
-// Tiraz Application JavaScript
+// Taarez Application JavaScript
 // تطبيق طراز
 
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('Tiraz Application loaded - تطبيق طراز محمّل');
+    console.log('Taarez Application loaded - تطبيق طراز محمّل');
 
     // Auto-hide flash messages after 5 seconds
     const flashMessages = document.querySelectorAll('.flash');
