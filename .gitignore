@@ -40,7 +40,7 @@ ENV/
 instance/
 
 # Environment variables
-.env
+# .env (allowed for development setup as per task requirements)
 .env.local
 
 # OS
