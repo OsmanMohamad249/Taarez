@@ -9,15 +9,15 @@ from sqlalchemy.orm import Session
 from core.database import get_db
 from core.security import hash_password, verify_password, create_access_token
 from models.user import User
-from schemas.user import UserRegister, Token
+from schemas.user import UserRegisterWithRole, Token
 
 router = APIRouter()
 
 
 @router.post("/register", response_model=dict, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserRegister, db: Session = Depends(get_db)):
+def register(user_data: UserRegisterWithRole, db: Session = Depends(get_db)):
     """
-    Register a new user.
+    Register a new user with role specification (for admin use).
     """
     # Check if user already exists
     existing_user = db.query(User).filter(User.email == user_data.email).first()

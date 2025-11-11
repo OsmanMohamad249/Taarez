@@ -11,7 +11,17 @@ from models.roles import UserRole
 
 
 class UserRegister(BaseModel):
-    """Schema for user registration."""
+    """Schema for public user registration (customers only)."""
+
+    email: EmailStr
+    password: str = Field(..., min_length=8, max_length=72)
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    # Role field removed - will default to CUSTOMER in the database model
+
+
+class UserRegisterWithRole(BaseModel):
+    """Schema for admin user registration (with role specification)."""
 
     email: EmailStr
     password: str = Field(..., min_length=8, max_length=72)
