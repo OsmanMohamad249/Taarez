@@ -2,8 +2,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/design_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/design_list_item.dart';
 import 'add_design_screen.dart';
+import '../auth/login_screen.dart';
 
 class DesignerDashboardScreen extends ConsumerWidget {
   const DesignerDashboardScreen({Key? key}) : super(key: key);
@@ -22,6 +24,18 @@ class DesignerDashboardScreen extends ConsumerWidget {
               ref.invalidate(myDesignsProvider);
             },
             tooltip: 'Refresh',
+          ),
+          IconButton(
+            icon: Icon(Icons.logout),
+            onPressed: () async {
+              await ref.read(authStateProvider.notifier).logout();
+              if (context.mounted) {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute(builder: (_) => LoginScreen()),
+                );
+              }
+            },
+            tooltip: 'Logout',
           ),
         ],
       ),
