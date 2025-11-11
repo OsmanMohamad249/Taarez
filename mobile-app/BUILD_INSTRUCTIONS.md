@@ -14,22 +14,21 @@ docker compose up flutter-dev
 
 The app will be available at http://localhost:8080
 
-## Generating Code (Freezed & JSON Serialization)
+## Local Development
 
-To generate the freezed and JSON serialization code:
+If you have Flutter installed locally, you can run:
 
 ```bash
-# Inside the Docker container or with Flutter installed locally
 cd mobile-app
 flutter pub get
-flutter pub run build_runner build --delete-conflicting-outputs
+flutter run -d web-server --web-port 8080 --web-hostname 0.0.0.0
 ```
 
 ## Environment Configuration
 
 The app uses `AppConfig` to determine the API base URL:
 
-- **Docker environment**: `http://backend:8000`
+- **Docker environment**: `http://backend:8000` (default)
 - **Android Emulator**: `http://10.0.2.2:8000`
 - **iOS Simulator**: `http://localhost:8000`
 
@@ -47,7 +46,7 @@ The app implements a complete authentication flow:
 2. **Login Screen**: Allows users to log in with email/password
 3. **Home Screen**: Displays user information and logout button
 
-All authentication state is managed using Riverpod with Freezed state classes.
+All authentication state is managed using Riverpod with custom union-type state classes.
 
 ## Architecture
 
@@ -63,3 +62,15 @@ lib/
 ├── services/               # API services (auth_service, api_service)
 └── utils/                  # Configuration and helpers
 ```
+
+## State Management
+
+The authentication state uses a custom union-type implementation that mimics freezed's functionality:
+
+- `AuthStateInitial`: Initial state
+- `AuthStateLoading`: Loading state
+- `AuthStateAuthenticated`: User is logged in
+- `AuthStateUnauthenticated`: User is not logged in
+- `AuthStateError`: Error occurred
+
+These states support pattern matching via `when()`, `whenOrNull()`, and `maybeWhen()` methods.
