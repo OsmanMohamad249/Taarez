@@ -17,7 +17,14 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 def hash_password(password: str) -> str:
     """
     Hash a password using bcrypt.
+    Note: Bcrypt has a maximum password length of 72 bytes.
+    Passwords are validated at the schema level to be <= 72 characters.
     """
+    # Bcrypt limitation: maximum 72 bytes
+    # This should already be validated by Pydantic schemas (max_length=72)
+    # but we add this as a safety check
+    if len(password.encode("utf-8")) > 72:
+        raise ValueError("Password cannot be longer than 72 bytes")
     return pwd_context.hash(password)
 
 

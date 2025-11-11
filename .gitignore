@@ -43,6 +43,9 @@ instance/
 # .env (allowed for development setup as per task requirements)
 .env.local
 
+# Backup files from sed
+*.bak
+
 # OS
 .DS_Store
 Thumbs.db
