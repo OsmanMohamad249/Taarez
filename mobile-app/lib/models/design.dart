@@ -1,52 +1,66 @@
 // lib/models/design.dart
 class Design {
   final String id;
-  final String title;
-  final String description;
-  final String styleType;
-  final double price;
-  final String imageUrl;
-  final String designerId;
-  final String categoryId;
+  final String name;
+  final String? description;
+  final String? styleType;
+  final double basePrice;
+  final String? baseImageUrl;
+  final String ownerId;
+  final String? categoryId;
+  final bool isActive;
   final DateTime createdAt;
+  final Map<String, dynamic>? customizationRules;
   
   Design({
     required this.id,
-    required this.title,
-    required this.description,
-    required this.styleType,
-    required this.price,
-    required this.imageUrl,
-    required this.designerId,
-    required this.categoryId,
+    required this.name,
+    this.description,
+    this.styleType,
+    required this.basePrice,
+    this.baseImageUrl,
+    required this.ownerId,
+    this.categoryId,
+    required this.isActive,
     required this.createdAt,
+    this.customizationRules,
   });
   
   factory Design.fromJson(Map<String, dynamic> json) {
     return Design(
       id: json['id'],
-      title: json['title'],
+      name: json['name'],
       description: json['description'],
       styleType: json['style_type'],
-      price: (json['price'] as num).toDouble(),
-      imageUrl: json['image_url'],
-      designerId: json['designer_id'],
+      basePrice: (json['base_price'] as num).toDouble(),
+      baseImageUrl: json['base_image_url'],
+      ownerId: json['owner_id'],
       categoryId: json['category_id'],
+      isActive: json['is_active'] ?? true,
       createdAt: DateTime.parse(json['created_at']),
+      customizationRules: json['customization_rules'],
     );
   }
   
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'title': title,
+      'name': name,
       'description': description,
       'style_type': styleType,
-      'price': price,
-      'image_url': imageUrl,
-      'designer_id': designerId,
+      'base_price': basePrice,
+      'base_image_url': baseImageUrl,
+      'owner_id': ownerId,
       'category_id': categoryId,
+      'is_active': isActive,
       'created_at': createdAt.toIso8601String(),
+      'customization_rules': customizationRules,
     };
   }
+  
+  // Convenience getters for backward compatibility
+  String get title => name;
+  double get price => basePrice;
+  String get imageUrl => baseImageUrl ?? '';
+  String get designerId => ownerId;
 }

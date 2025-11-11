@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import 'register_screen.dart';
 import 'home_screen.dart';
+import '../designs/designer_dashboard_screen.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   @override
@@ -36,9 +37,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _isLoading = false);
     
     if (success && mounted) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-      );
+      // Get the user's role and navigate accordingly
+      final user = ref.read(authStateProvider).user;
+      
+      if (user != null && user.isDesigner) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => DesignerDashboardScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
+      }
     } else {
       final error = ref.read(authStateProvider).error;
       if (mounted) {

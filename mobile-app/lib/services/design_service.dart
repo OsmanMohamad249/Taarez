@@ -7,26 +7,25 @@ import 'api_service.dart';
 class DesignService extends ApiService {
   /// Get all designs
   Future<Map<String, dynamic>> getDesigns({
-    int page = 1,
-    int perPage = 20,
+    int skip = 0,
+    int limit = 100,
   }) async {
     try {
       final headers = await getAuthHeaders();
       final response = await http.get(
-        Uri.parse('${ApiService.apiBaseUrl}/designs?page=$page&per_page=$perPage'),
+        Uri.parse('${ApiService.apiBaseUrl}/designs?skip=$skip&limit=$limit'),
         headers: headers,
       );
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final designs = (data['items'] as List)
+        final designs = (data as List)
             .map((item) => Design.fromJson(item))
             .toList();
         
         return {
           'success': true,
           'designs': designs,
-          'total': data['total'],
         };
       } else {
         return {
@@ -39,6 +38,32 @@ class DesignService extends ApiService {
         'success': false,
         'error': 'Network error: ${e.toString()}',
       };
+    }
+  }
+  
+  /// Get my designs (designer's own designs)
+  Future<List<Design>> getMyDesigns({
+    int skip = 0,
+    int limit = 100,
+  }) async {
+    try {
+      final headers = await getAuthHeaders();
+      final response = await http.get(
+        Uri.parse('${ApiService.apiBaseUrl}/designs/me?skip=$skip&limit=$limit'),
+        headers: headers,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        final designs = (data as List)
+            .map((item) => Design.fromJson(item))
+            .toList();
+        return designs;
+      } else {
+        throw Exception(handleError(response));
+      }
+    } catch (e) {
+      throw Exception('Failed to load designs: ${e.toString()}');
     }
   }
   
@@ -73,26 +98,29 @@ class DesignService extends ApiService {
   
   /// Create new design
   Future<Map<String, dynamic>> createDesign({
-    required String title,
+    required String name,
     required String description,
-    required String styleType,
-    required double price,
-    required String imageUrl,
-    required String categoryId,
+    required double basePrice,
+    String? styleType,
+    String? baseImageUrl,
+    String? categoryId,
   }) async {
     try {
       final headers = await getAuthHeaders();
+      final body = {
+        'name': name,
+        'description': description,
+        'base_price': basePrice,
+      };
+      
+      if (styleType != null) body['style_type'] = styleType;
+      if (baseImageUrl != null) body['base_image_url'] = baseImageUrl;
+      if (categoryId != null) body['category_id'] = categoryId;
+      
       final response = await http.post(
         Uri.parse('${ApiService.apiBaseUrl}/designs'),
         headers: headers,
-        body: jsonEncode({
-          'title': title,
-          'description': description,
-          'style_type': styleType,
-          'price': price,
-          'image_url': imageUrl,
-          'category_id': categoryId,
-        }),
+        body: jsonEncode(body),
       );
       
       if (response.statusCode == 201) {
@@ -118,22 +146,22 @@ class DesignService extends ApiService {
   /// Update design
   Future<Map<String, dynamic>> updateDesign({
     required String designId,
-    String? title,
+    String? name,
     String? description,
     String? styleType,
-    double? price,
-    String? imageUrl,
+    double? basePrice,
+    String? baseImageUrl,
     String? categoryId,
   }) async {
     try {
       final headers = await getAuthHeaders();
       final body = <String, dynamic>{};
       
-      if (title != null) body['title'] = title;
+      if (name != null) body['name'] = name;
       if (description != null) body['description'] = description;
       if (styleType != null) body['style_type'] = styleType;
-      if (price != null) body['price'] = price;
-      if (imageUrl != null) body['image_url'] = imageUrl;
+      if (basePrice != null) body['base_price'] = basePrice;
+      if (baseImageUrl != null) body['base_image_url'] = baseImageUrl;
       if (categoryId != null) body['category_id'] = categoryId;
       
       final response = await http.put(

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../providers/auth_provider.dart';
 import 'login_screen.dart';
 import 'home_screen.dart';
+import '../designs/designer_dashboard_screen.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   @override
@@ -27,9 +28,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     if (!mounted) return;
     
     if (authState.isAuthenticated) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => HomeScreen()),
-      );
+      final user = authState.user;
+      
+      // Route based on user role
+      if (user != null && user.isDesigner) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => DesignerDashboardScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => HomeScreen()),
+        );
+      }
     } else {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => LoginScreen()),
