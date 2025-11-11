@@ -35,12 +35,12 @@ def test_user_registration_defaults_to_customer():
 
     assert response.status_code == 201
     data = response.json()
-    
+
     # Verify user was created
     assert data["email"] == email
     assert data["first_name"] == "Test"
     assert data["last_name"] == "Customer"
-    
+
     # Verify role is CUSTOMER
     assert data["role"] == "customer"
     assert data["is_active"] is True
@@ -74,7 +74,7 @@ def test_user_can_login():
 
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify token response
     assert "access_token" in data
     assert data["token_type"] == "bearer"
@@ -112,14 +112,14 @@ def test_users_me_returns_role():
 
     assert response.status_code == 200
     data = response.json()
-    
+
     # Verify all user data is returned
     assert data["email"] == email
     assert data["first_name"] == "Me"
     assert data["last_name"] == "Test"
     assert data["is_active"] is True
     assert data["is_superuser"] is False
-    
+
     # Verify role is included and is CUSTOMER
     assert "role" in data
     assert data["role"] == "customer"

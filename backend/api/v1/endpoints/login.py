@@ -16,8 +16,7 @@ router = APIRouter()
 
 @router.post("/access-token", response_model=Token)
 def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
+    form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depends(get_db)
 ):
     """
     OAuth2 compatible token login.
@@ -36,8 +35,7 @@ def login(
 
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="User is not active"
+            status_code=status.HTTP_403_FORBIDDEN, detail="User is not active"
         )
 
     # Create access token with user email as subject
