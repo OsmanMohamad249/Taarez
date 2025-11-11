@@ -20,6 +20,8 @@ from models.user import User  # noqa: F401
 from models.measurement import Measurement  # noqa: F401
 from models.category import Category  # noqa: F401
 from models.design import Design  # noqa: F401
+from models.fabric import Fabric  # noqa: F401
+from models.color import Color  # noqa: F401
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

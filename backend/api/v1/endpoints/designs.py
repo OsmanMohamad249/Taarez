@@ -12,6 +12,13 @@ from models.design import Design
 from models.category import Category
 from models.user import User
 from schemas.design import DesignCreate, DesignUpdate, DesignResponse
+from crud.design import (
+    get_designs,
+    get_design,
+    create_design,
+    update_design,
+    delete_design,
+)
 
 router = APIRouter()
 
@@ -49,12 +56,29 @@ def list_designs(
     return designs
 
 
+@router.get("/me", response_model=List[DesignResponse])
+def get_my_designs(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_designer_user),
+):
+    """
+    Get all designs owned by the currently authenticated designer.
+
+    - **skip**: Number of designs to skip (for pagination)
+    - **limit**: Maximum number of designs to return
+    """
+    designs = get_designs(db=db, skip=skip, limit=limit, owner_id=current_user.id)
+    return designs
+
+
 @router.get("/{design_id}", response_model=DesignResponse)
-def get_design(design_id: str, db: Session = Depends(get_db)):
+def get_design_by_id(design_id: str, db: Session = Depends(get_db)):
     """
     Get a specific design by ID.
     """
-    design = db.query(Design).filter(Design.id == design_id).first()
+    design = get_design(db, design_id)
 
     if not design:
         raise HTTPException(
@@ -66,7 +90,7 @@ def get_design(design_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/", response_model=DesignResponse, status_code=status.HTTP_201_CREATED)
-def create_design(
+def create_new_design(
     design_data: DesignCreate,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_designer_user),
@@ -87,26 +111,13 @@ def create_design(
                 detail="Category not found",
             )
 
-    # Create new design
-    new_design = Design(
-        title=design_data.title,
-        description=design_data.description,
-        style_type=design_data.style_type,
-        price=design_data.price,
-        image_url=design_data.image_url,
-        category_id=design_data.category_id,
-        designer_id=current_user.id,
-    )
-
-    db.add(new_design)
-    db.commit()
-    db.refresh(new_design)
-
+    # Create new design using CRUD
+    new_design = create_design(db=db, design=design_data, owner_id=current_user.id)
     return new_design
 
 
 @router.put("/{design_id}", response_model=DesignResponse)
-def update_design(
+def update_existing_design(
     design_id: str,
     design_data: DesignUpdate,
     db: Session = Depends(get_db),
@@ -117,7 +128,7 @@ def update_design(
 
     Requires designer role and ownership of the design.
     """
-    design = db.query(Design).filter(Design.id == design_id).first()
+    design = get_design(db, design_id)
 
     if not design:
         raise HTTPException(
@@ -126,19 +137,16 @@ def update_design(
         )
 
     # Check if user owns this design (unless superuser)
-    if design.designer_id != current_user.id and not current_user.is_superuser:
+    if design.owner_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only update your own designs",
         )
 
-    # Update fields if provided
-    update_data = design_data.dict(exclude_unset=True)
-
     # Verify category exists if being updated
-    if "category_id" in update_data and update_data["category_id"]:
+    if design_data.category_id:
         category = (
-            db.query(Category).filter(Category.id == update_data["category_id"]).first()
+            db.query(Category).filter(Category.id == design_data.category_id).first()
         )
         if not category:
             raise HTTPException(
@@ -146,17 +154,13 @@ def update_design(
                 detail="Category not found",
             )
 
-    for field, value in update_data.items():
-        setattr(design, field, value)
-
-    db.commit()
-    db.refresh(design)
-
-    return design
+    # Update design using CRUD
+    updated_design = update_design(db=db, design_id=design_id, design=design_data)
+    return updated_design
 
 
 @router.delete("/{design_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_design(
+def delete_existing_design(
     design_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_designer_user),
@@ -166,7 +170,7 @@ def delete_design(
 
     Requires designer role and ownership of the design.
     """
-    design = db.query(Design).filter(Design.id == design_id).first()
+    design = get_design(db, design_id)
 
     if not design:
         raise HTTPException(
@@ -175,13 +179,12 @@ def delete_design(
         )
 
     # Check if user owns this design (unless superuser)
-    if design.designer_id != current_user.id and not current_user.is_superuser:
+    if design.owner_id != current_user.id and not current_user.is_superuser:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You can only delete your own designs",
         )
 
-    db.delete(design)
-    db.commit()
-
+    # Delete design using CRUD
+    delete_design(db=db, design_id=design_id)
     return None
