@@ -2,6 +2,83 @@ name: CI
 
 on:
   push:
+    branches: [ main, fix/test-environment ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: qeyafa
+          POSTGRES_PASSWORD: qeyafa_password
+          POSTGRES_DB: qeyafa_db
+        options: >-
+          --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://qeyafa:qeyafa_password@localhost:5432/qeyafa_db
+      SECRET_KEY: ${{ secrets.SECRET_KEY }}
+      UPLOAD_DIR: ${{ github.workspace }}/backend/uploads
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: "${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt', '**/requirements-dev.txt') }}-${{ matrix.python-version || '3.12' }}"
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Wait for Postgres
+        run: |
+          echo "Waiting for Postgres..."
+          until pg_isready -h localhost -p 5432 -U qeyafa; do sleep 1; done
+        env:
+          PGPASSWORD: qeyafa_password
+
+      - name: Apply migrations and prepare upload dir
+        working-directory: backend
+        run: |
+          # ensure a SECRET_KEY exists (use secret if present, otherwise fallback)
+          : ${SECRET_KEY:=0123456789abcdef0123456789abcdef}
+          echo "Using SECRET_KEY length=${#SECRET_KEY}"
+
+          mkdir -p "$UPLOAD_DIR"
+          chmod -R a+rwx "$UPLOAD_DIR" || true
+
+          # run alembic migrations
+          export DATABASE_URL="${DATABASE_URL}"
+          export SECRET_KEY="$SECRET_KEY"
+          python -m alembic upgrade head
+
+      - name: Run tests
+        run: |
+          export PYTHONPATH=backend
+          mkdir -p "$UPLOAD_DIR"
+          chmod -R a+rwx "$UPLOAD_DIR" || true
+          pytest -q backend/tests
+name: CI
+
+on:
+  push:
     branches: [ main, chore/fastapi-flutter-boilerplate ]
   pull_request:
     branches: [ main ]
