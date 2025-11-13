@@ -1,31 +1,27 @@
-"""
-Security utilities for password hashing and JWT token management.
-"""
+"""Security utilities for password hashing and JWT token management."""
 
 from datetime import datetime, timedelta
 from typing import Optional
 
+import hashlib
+import bcrypt
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 
 from core.config import settings
 
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-
 
 def hash_password(password: str) -> str:
+    """Hash password using SHA-256 pre-hash + bcrypt.
+
+    This avoids the bcrypt 72-byte input limitation by hashing the
+    input with SHA-256 first, then passing the 32-byte digest to bcrypt.
+    Returns the bcrypt hash as a UTF-8 string.
     """
-    Hash a password using bcrypt.
-    Note: Bcrypt has a maximum password length of 72 bytes.
-    Passwords are validated at the schema level to be <= 72 characters.
-    """
-    # Bcrypt limitation: maximum 72 bytes
-    # This should already be validated by Pydantic schemas (max_length=72)
-    # but we add this as a safety check
-    if len(password.encode("utf-8")) > 72:
-        raise ValueError("Password cannot be longer than 72 bytes")
-    return pwd_context.hash(password)
+    if isinstance(password, str):
+        password = password.encode("utf-8")
+    digest = hashlib.sha256(password).digest()
+    hashed = bcrypt.hashpw(digest, bcrypt.gensalt())
+    return hashed.decode("utf-8")
 
 
 # Alias for compatibility
@@ -33,16 +29,22 @@ get_password_hash = hash_password
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verify a plain password against a bcrypt hash produced by
+    :func:`hash_password`.
     """
-    Verify a plain password against a hashed password.
-    """
-    return pwd_context.verify(plain_password, hashed_password)
+    if isinstance(plain_password, str):
+        plain_password = plain_password.encode("utf-8")
+    if isinstance(hashed_password, str):
+        hashed_password = hashed_password.encode("utf-8")
+    digest = hashlib.sha256(plain_password).digest()
+    try:
+        return bcrypt.checkpw(digest, hashed_password)
+    except ValueError:
+        return False
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
-    """
-    Create a JWT access token.
-    """
+    """Create a JWT access token."""
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.utcnow() + expires_delta
@@ -59,8 +61,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -
 
 
 def verify_access_token(token: str) -> Optional[dict]:
-    """
-    Verify and decode a JWT access token.
+    """Verify and decode a JWT access token.
+
     Returns the token payload if valid, None otherwise.
     """
     try:

@@ -2,3 +2,20 @@ Flask==3.0.0
 Flask-SQLAlchemy==3.1.1
 python-dotenv==1.0.0
 Werkzeug==3.0.1
+
+# Backend / FastAPI dependencies (required by `backend/` tests and app)
+fastapi==0.109.1
+uvicorn[standard]==0.22.0
+python-multipart==0.0.6
+pydantic[dotenv]==1.10.7
+gunicorn==21.2.0
+sqlalchemy==2.0.23
+alembic==1.13.1
+psycopg2-binary==2.9.9
+passlib[bcrypt]==1.7.4
+python-jose[cryptography]==3.4.0
+python-dotenv==1.0.0
+email-validator==2.1.1
+aiofiles==23.2.1
+httpx==0.25.2
+

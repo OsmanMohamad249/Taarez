@@ -21,7 +21,8 @@ from services.ai_client import ai_client, AIServiceError
 router = APIRouter()
 
 # Configuration
-UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/app/uploads")
+# Use workspace-local uploads directory by default so tests can write files.
+UPLOAD_DIR = os.getenv("UPLOAD_DIR", "/workspaces/Qeyafa/backend/uploads")
 ALLOWED_EXTENSIONS = {"jpg", "jpeg", "png"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
