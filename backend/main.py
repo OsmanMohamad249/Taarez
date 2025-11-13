@@ -1,5 +1,8 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import os
+from fastapi_limiter import FastAPILimiter
+import redis.asyncio as redis
 
 from core.config import settings
 from api.v1.api import api_router
@@ -25,6 +28,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+# Rate limiting setup (Redis)
+import asyncio
+@app.on_event("startup")
+async def startup():
+    redis_url = os.getenv("REDIS_URL", "redis://localhost:6379/0")
+    redis_client = redis.from_url(redis_url, encoding="utf8", decode_responses=True)
+    await FastAPILimiter.init(redis_client)
 
 # Include API routers
 app.include_router(api_router, prefix=settings.API_V1_PREFIX)

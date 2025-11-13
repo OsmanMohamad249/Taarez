@@ -3,11 +3,9 @@ set -e
 
 echo "Starting Qeyafa Backend..."
 
-# Wait for PostgreSQL to be ready
-echo "Waiting for PostgreSQL to be ready..."
-while ! nc -z postgres 5432; do
-  sleep 1
-done
+# Wait for PostgreSQL to be ready (actual DB connection)
+echo "Waiting for PostgreSQL to be ready (SQLAlchemy check)..."
+python wait_for_db.py "$DATABASE_URL"
 echo "PostgreSQL is ready!"
 
 # Run database migrations
