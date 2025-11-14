@@ -20,33 +20,6 @@ def get_current_admin_user(db: Session = Depends(get_db), token: str = Depends(o
     if not user or not user.is_superuser or role != UserRole.ADMIN:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin privileges required.")
     return user
-# Admin-only endpoint to create designer/admin users
-@router.post("/admin-create-user", response_model=dict, status_code=status.HTTP_201_CREATED)
-def admin_create_user(user_data: UserRegisterWithRole, db: Session = Depends(get_db), current_admin: User = Depends(get_current_admin_user)):
-    # Only allow designer or admin roles
-    if str(user_data.role).lower() not in ["designer", "admin"]:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Only designer or admin roles allowed via this endpoint."
-        )
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered"
-        )
-    hashed_pwd = hash_password(user_data.password)
-    new_user = User(
-        email=user_data.email,
-        hashed_password=hashed_pwd,
-        first_name=user_data.first_name,
-        last_name=user_data.last_name,
-        role=user_data.role,
-        is_superuser=(user_data.role == UserRole.ADMIN),
-    )
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
-    return {"message": f"{user_data.role.value.capitalize()} user created successfully", "email": new_user.email}
 """
 Authentication endpoints.
 """

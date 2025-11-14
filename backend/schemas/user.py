@@ -1,3 +1,28 @@
+from typing import Optional
+from uuid import UUID
+from datetime import datetime
+from pydantic import BaseModel
+from models.roles import UserRole
+
+class UserUpdate(BaseModel):
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_active: Optional[bool] = None
+    is_superuser: Optional[bool] = None
+    role: Optional[UserRole] = None
+
+class UserOut(BaseModel):
+    id: UUID
+    email: str
+    first_name: Optional[str] = None
+    last_name: Optional[str] = None
+    is_active: bool
+    is_superuser: bool
+    role: UserRole
+    created_at: datetime
+
+    class Config:
+        orm_mode = True
 """
 Pydantic schemas for User operations.
 """
