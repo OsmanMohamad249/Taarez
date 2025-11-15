@@ -1,0 +1,49 @@
+name: Freezed Codegen
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - feature/sprint4-freezed-upgrade
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: Generate freezed files and push
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Display Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        working-directory: mobile-app
+        run: flutter pub get
+
+      - name: Run build_runner
+        working-directory: mobile-app
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Commit generated files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          # Only commit if there are changes
+          if ! git diff --staged --quiet; then
+            git commit -m "chore(mobile): regenerate freezed files (codegen)"
+            git push origin HEAD
+          else
+            echo "No generated changes to commit"
+          fi
