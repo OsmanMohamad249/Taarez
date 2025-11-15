@@ -117,9 +117,10 @@ jobs:
       - name: Initialize alembic_version table
         run: |
           set -euo pipefail
-          echo "Creating/altering alembic_version table to ensure version_num VARCHAR(255)"
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U test_user -d test_db -v ON_ERROR_STOP=1 -c \"CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(255) NOT NULL PRIMARY KEY);\""
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U test_user -d test_db -v ON_ERROR_STOP=1 -c \"ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);\"" || true
+          echo "Creating/altering alembic_version table to ensure version_num VARCHAR(255) (run as postgres superuser)"
+          # Use the postgres superuser to ensure we have permission to ALTER the table
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U postgres -d test_db -v ON_ERROR_STOP=1 -c \"CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(255) NOT NULL PRIMARY KEY);\""
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U postgres -d test_db -v ON_ERROR_STOP=1 -c \"ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);\"" || true
 
       - name: Start backend and tester
         run: |
