@@ -97,6 +97,7 @@ fi
 echo "Starting Postgres container (host:localhost:${HOST_PORT} -> container:5432) ..."
 if [ "${DRY_RUN:-}" = "1" ]; then
   echo "DRY_RUN set — skipping docker run and pytest. HOST_PORT=$HOST_PORT"
+  exit 0
 else
   docker run -d \
   --name "$CONTAINER_NAME" \
