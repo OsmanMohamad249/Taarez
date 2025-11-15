@@ -23,7 +23,10 @@ jobs:
 
       - name: Set up Docker Compose file for CI
         run: |
-          cat > docker-compose.ci.yml <<'YAML'
+          # Generate a cryptographically strong SECRET_KEY for the tester container
+          SECRET=$(openssl rand -hex 32)
+          echo "Using generated SECRET_KEY for CI"
+          cat > docker-compose.ci.yml <<YAML
           version: "3.8"
           services:
             postgres:
@@ -55,7 +58,7 @@ jobs:
               environment:
                 DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
                 REDIS_URL: redis://redis:6379/0
-                SECRET_KEY: test_secret_key_ci_$(date +%s)
+                SECRET_KEY: "${SECRET}"
               depends_on:
                 - postgres
                 - redis
