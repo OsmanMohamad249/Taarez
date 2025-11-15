@@ -149,8 +149,7 @@ jobs:
           set -euo pipefail
           mkdir -p ci-logs || true
           echo "Writing redacted DATABASE_URL and connection info from backend to ci-logs"
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "python - <<'PY'\nfrom core.config import settings\nimport re\nurl = settings.DATABASE_URL\nredacted = re.sub(r'//([^:]+):([^@]+)@', r'//\\1:*****@', url)\nprint('REDACTED_DB_URL='+redacted)\nPY" > ci-logs/backend-db-url.log 2>&1 || true
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "python - <<'PY'\nfrom sqlalchemy import create_engine\nfrom core.config import settings\neng = create_engine(settings.DATABASE_URL)\nwith eng.connect() as conn:\n    r = conn.execute('select current_database(), current_user')\n    for row in r:\n        print('CURRENT_DATABASE=%s CURRENT_USER=%s' % (row[0], row[1]))\nPY" >> ci-logs/backend-db-url.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc 'env | grep DATABASE_URL | sed -E "s#(//[^:]+):[^@]+@#\\1:*****@#"' > ci-logs/backend-db-url.log 2>&1 || true
 
       - name: Run Alembic migrations
         run: |
