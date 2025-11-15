@@ -117,6 +117,9 @@ def setup_database():
     # Run Alembic migrations to create the test schema (use settings.DATABASE_URL)
     alembic_ini_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'alembic.ini'))
     alembic_cfg = Config(alembic_ini_path)
+    # Run Alembic migrations to create the test schema. Do not silently
+    # fall back to SQLAlchemy `create_all()` so missing migrations surface
+    # and can be fixed explicitly on the branch.
     command.upgrade(alembic_cfg, "head")
 
     # Create test admin user
@@ -146,8 +149,6 @@ def setup_database():
 
     yield
 
-    # Try to teardown by downgrading migrations to base. If that fails, fall back to drop_all.
-    try:
-        command.downgrade(alembic_cfg, "base")
-    except Exception:
-        Base.metadata.drop_all(bind=engine)
+    # Teardown by downgrading migrations to base. Allow errors to surface
+    # to encourage fixing migration issues on the branch rather than masking them.
+    command.downgrade(alembic_cfg, "base")
