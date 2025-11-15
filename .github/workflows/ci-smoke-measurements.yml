@@ -135,11 +135,11 @@ jobs:
           SQL
 
           # Feed the SQL into psql running in the postgres container and capture the output to host-side ci-logs
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U postgres -d test_db -v ON_ERROR_STOP=1 -f - < /tmp/alembic_init.sql > ci-logs/alembic-init.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U test_user -d test_db -v ON_ERROR_STOP=1 -f - < /tmp/alembic_init.sql > ci-logs/alembic-init.log 2>&1 || true
 
           # Dump verification info so CI artifacts show the column type and any rows present
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U postgres -d test_db -c "SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name='alembic_version' AND column_name='version_num';" > ci-logs/alembic-pre-init-schema.log 2>&1 || true
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U postgres -d test_db -c "SELECT * FROM alembic_version;" > ci-logs/alembic-pre-init-rows.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U test_user -d test_db -c "SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name='alembic_version' AND column_name='version_num';" > ci-logs/alembic-pre-init-schema.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U test_user -d test_db -c "SELECT * FROM alembic_version;" > ci-logs/alembic-pre-init-rows.log 2>&1 || true
 
       - name: Start backend and tester
         run: |
