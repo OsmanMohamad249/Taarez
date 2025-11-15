@@ -14,6 +14,44 @@ ENV_FILE="${REPO_ROOT}/backend/tests/.env.test"
 CONTAINER_NAME="qeyafa_test_postgres"
 POSTGRES_IMAGE="postgres:15"
 
+# Default host port to bind Postgres to. If occupied, we'll pick a free port.
+HOST_PORT=5432
+
+function is_port_in_use() {
+  local port=$1
+  if command -v ss >/dev/null 2>&1; then
+    ss -ltn | awk '{print $4}' | grep -E ":[0-9]+$" | sed -E 's/.*:([0-9]+)$/\1/' | grep -xq "$port" && return 0 || return 1
+  elif command -v lsof >/dev/null 2>&1; then
+    lsof -iTCP:"$port" -sTCP:LISTEN >/dev/null 2>&1 && return 0 || return 1
+  else
+    # Fallback: try python to bind
+    python - <<'PY' >/dev/null 2>&1 || true
+import socket,sys
+port=%s
+s=socket.socket()
+try:
+    s.bind(('127.0.0.1',port))
+    s.close()
+    sys.exit(1)
+except Exception:
+    sys.exit(0)
+PY
+    return $? # best-effort
+  fi
+}
+
+function find_free_port() {
+  # Get an available ephemeral port from the OS via Python
+  python - <<'PY'
+import socket
+s=socket.socket()
+s.bind(('127.0.0.1',0))
+port=s.getsockname()[1]
+print(port)
+s.close()
+PY
+}
+
 # Load defaults
 POSTGRES_USER="test_user"
 POSTGRES_PASSWORD="test_password"
@@ -42,13 +80,22 @@ if docker ps -a --format '{{.Names}}' | grep -q "^${CONTAINER_NAME}$"; then
   docker rm -f "$CONTAINER_NAME"
 fi
 
-echo "Starting Postgres container (localhost:5432) ..."
+# Determine host port to bind: prefer 5432, otherwise pick a free port
+if is_port_in_use 5432; then
+  echo "Host port 5432 is in use — selecting a free port"
+  HOST_PORT=$(find_free_port)
+  echo "Selected host port: $HOST_PORT"
+else
+  HOST_PORT=5432
+fi
+
+echo "Starting Postgres container (host:localhost:${HOST_PORT} -> container:5432) ..."
 docker run -d \
   --name "$CONTAINER_NAME" \
   -e POSTGRES_USER="$POSTGRES_USER" \
   -e POSTGRES_PASSWORD="$POSTGRES_PASSWORD" \
   -e POSTGRES_DB="$POSTGRES_DB" \
-  -p 5432:5432 \
+  -p ${HOST_PORT}:5432 \
   $POSTGRES_IMAGE >/dev/null
 
 echo "Waiting for Postgres to be ready..."
@@ -71,7 +118,7 @@ done
 
 echo "Running pytest (this may take a while)"
 # Export env so backend code picks up test settings
-export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}"
+export DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:${HOST_PORT}/${POSTGRES_DB}"
 export POSTGRES_USER POSTGRES_PASSWORD POSTGRES_DB
 
 # Run tests (adjust pytest args as needed)
