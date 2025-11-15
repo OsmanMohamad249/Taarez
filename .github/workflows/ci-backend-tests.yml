@@ -61,8 +61,8 @@ jobs:
                 - redis
               volumes:
                 - ./:/app
-              working_dir: /app/backend
-              command: /bin/bash -lc "pytest tests/test_templates.py -q -k template_crud_flow"
+              working_dir: /app
+              command: /bin/bash -lc "pytest backend/tests/test_templates.py -q -k template_crud_flow"
           YAML
 
       - name: Start services and run tests
