@@ -202,6 +202,27 @@ YAML
           echo "Verifying measurement was persisted in DB (using backend container)"
           docker compose exec -T backend bash -lc "export TEST_EMAIL='${TEST_EMAIL}'; python /workspaces/Qeyafa/backend/ci/check_db.py"
 
+      - name: Prepare logs archive (create ci-logs.tar.gz)
+        if: always()
+        run: |
+          set -euo pipefail
+          mkdir -p ci-logs || true
+          # collect compose logs (no-color), ps and top for debugging
+          docker compose --env-file .ci.env -f docker-compose.ci.yml logs --no-color > ci-logs/compose.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml ps -a > ci-logs/ps.txt 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml top > ci-logs/top.txt 2>&1 || true
+          # collect service-specific logs if present; ignore errors
+          docker compose --env-file .ci.env -f docker-compose.ci.yml logs backend --no-color > ci-logs/backend.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml logs tester --no-color > ci-logs/tester.log 2>&1 || true
+          tar -czf ci-logs.tar.gz ci-logs || true
+
+      - name: Upload logs artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: smoke-ci-logs
+          path: ci-logs.tar.gz
+
       - name: Tear down compose services
         if: always()
         run: |
