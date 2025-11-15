@@ -81,10 +81,10 @@ jobs:
                   context: .
                   dockerfile: backend/Dockerfile
                 environment:
-                  DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
-                  REDIS_URL: redis://redis:6379/0
-                  SECRET_KEY: "${SECRET_KEY}"
-                  PYTHONPATH: "/app/backend"
+                  - DATABASE_URL=postgresql://test_user:test_password@postgres:5432/test_db
+                  - REDIS_URL=redis://redis:6379/0
+                  - SECRET_KEY=${SECRET_KEY}
+                  - PYTHONPATH=/app:/app/backend
                 depends_on:
                   - backend
                 volumes:
@@ -121,7 +121,9 @@ jobs:
           # create tiny PNG (1x1 transparent) to POST
           IMG_B64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='
           echo "$IMG_B64" | base64 -d > front.png
-          cp front.png back.png left.png right.png
+          for f in back left right; do
+            cp front.png "${f}.png"
+          done
 
           # register (ignore error if already exists)
           curl -sS -X POST http://localhost:8000/api/v1/auth/register \
