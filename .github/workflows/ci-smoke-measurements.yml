@@ -101,8 +101,8 @@ jobs:
           # Validate docker compose interpolation before bringing services up
           docker compose -f docker-compose.ci.yml --env-file .ci.env config
 
-          # Start services using the env-file
-          docker compose --env-file .ci.env -f docker-compose.ci.yml up --build -d
+          # Start only Postgres and Redis first so we can initialize DB before starting backend
+          docker compose --env-file .ci.env -f docker-compose.ci.yml up -d postgres redis
 
       - name: Wait for Postgres readiness
         run: |
@@ -114,15 +114,24 @@ jobs:
           done
           echo "Postgres did not become ready"; exit 1
 
+      - name: Initialize alembic_version table
+        run: |
+          set -euo pipefail
+          echo "Creating/altering alembic_version table to ensure version_num VARCHAR(255)"
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U test_user -d test_db -v ON_ERROR_STOP=1 -c \"CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(255) NOT NULL PRIMARY KEY);\""
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U test_user -d test_db -v ON_ERROR_STOP=1 -c \"ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);\"" || true
+
+      - name: Start backend and tester
+        run: |
+          set -euo pipefail
+          echo "Starting backend and tester services"
+          docker compose --env-file .ci.env -f docker-compose.ci.yml up --build -d backend tester
+
       - name: Run Alembic migrations
         run: |
           set -euo pipefail
           # Ensure a host-side ci-logs dir exists (mounted into containers)
           mkdir -p ci-logs
-          # Ensure alembic_version column can store longer revision identifiers
-          # Create or alter the alembic_version table so version_num can hold longer strings
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U test_user -d test_db -c \"CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(255) NOT NULL PRIMARY KEY);\"" || true
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U test_user -d test_db -c \"ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);\"" || true
           # Run alembic inside the backend container and have it write its log to the mounted /ci-logs
           docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "cd /app/backend && alembic -c alembic.ini upgrade head > /ci-logs/alembic.log 2>&1"
           # Also print the alembic log to the runner so the job output contains the migration trace
