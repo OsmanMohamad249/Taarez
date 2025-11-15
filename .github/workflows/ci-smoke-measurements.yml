@@ -41,6 +41,11 @@ jobs:
       - name: Run measurements process smoke test
         run: |
           set -euo pipefail
+          # make a unique test email per run
+          TEST_EMAIL="ci_smoke+${GITHUB_RUN_ID}@example.com"
+          export TEST_EMAIL
+          echo "Using TEST_EMAIL=$TEST_EMAIL"
+
           # create tiny PNG (1x1 transparent) to POST
           IMG_B64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII='
           echo "$IMG_B64" | base64 -d > front.png
@@ -49,10 +54,10 @@ jobs:
           # register (ignore error if already exists)
           curl -sS -X POST http://localhost:8000/api/v1/auth/register \
             -H 'Content-Type: application/json' \
-            -d '{"email":"ci_smoke@example.com","password":"password123","first_name":"CI","last_name":"Smoke","role":"customer"}' || true
+            -d "{\"email\":\"${TEST_EMAIL}\",\"password\":\"password123\",\"first_name\":\"CI\",\"last_name\":\"Smoke\",\"role\":\"customer\"}" || true
 
           # login and obtain token
-          TOKEN=$(curl -sS -X POST http://localhost:8000/api/v1/auth/login -d 'username=ci_smoke@example.com&password=password123' | jq -r .access_token)
+          TOKEN=$(curl -sS -X POST http://localhost:8000/api/v1/auth/login -d "username=${TEST_EMAIL}&password=password123" | jq -r .access_token)
           if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then
             echo "Failed to login or obtain token"; exit 1
           fi
@@ -77,7 +82,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Verifying measurement was persisted in DB (using backend container)"
-            docker compose exec -T backend python /workspaces/Qeyafa/backend/ci/check_db.py
+          docker compose exec -T backend bash -lc "export TEST_EMAIL='${TEST_EMAIL}'; python /workspaces/Qeyafa/backend/ci/check_db.py"
 
       - name: Tear down compose services
         if: always()
