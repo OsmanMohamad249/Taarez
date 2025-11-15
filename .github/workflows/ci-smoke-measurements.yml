@@ -127,9 +127,6 @@ jobs:
             IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='alembic_version' AND column_name='version_num') THEN
               ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);
             END IF;
-            IF NOT EXISTS (SELECT 1 FROM alembic_version) THEN
-              INSERT INTO alembic_version (version_num) VALUES ('init');
-            END IF;
           END
           $$;
           SQL
