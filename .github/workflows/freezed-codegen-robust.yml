@@ -14,6 +14,15 @@ jobs:
     name: Generate freezed files and push (with PAT fallback)
     runs-on: ubuntu-latest
     steps:
+      - name: Cache Pub packages
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.pub-cache
+            ~/.pub-cache/hosted
+          key: ${{ runner.os }}-pub-cache-${{ hashFiles('mobile-app/pubspec.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-cache-
       - name: Checkout
         uses: actions/checkout@v4
         with:
