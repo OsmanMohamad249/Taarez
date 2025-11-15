@@ -18,12 +18,12 @@ dependencies:
   flutter_secure_storage: ^8.0.0   # Secure token storage (compatible with 2.19)
   dartz: ^0.10.1                   # Functional programming
   intl: ^0.18.1                    # Internationalization
-  freezed_annotation: ^2.2.0       # Freezed annotations for code generation
+  freezed_annotation: ^3.1.0       # Freezed annotations for code generation (bumped for regen)
   file_picker: ^5.2.2             # Pick images/files for upload
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  build_runner: ^2.3.3             # Code generation tool
-  freezed: ^2.3.5                  # Code generator for unions/pattern-matching
+  build_runner: ^2.4.0             # Code generation tool
+  freezed: ^3.2.3                  # Code generator for unions/pattern-matching (bumped)
