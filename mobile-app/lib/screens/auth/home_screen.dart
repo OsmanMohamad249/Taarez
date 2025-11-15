@@ -2,8 +2,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/auth_provider.dart';
-import '../../features/auth/domain/auth_state.dart';
 import '../../features/auth/presentation/login_screen.dart';
+import '../measurements/measurements_list_screen.dart';
 
 class HomeScreen extends ConsumerStatefulWidget {
   @override
@@ -92,16 +92,28 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   ),
                 ),
                 SizedBox(height: 40),
-                ElevatedButton(
-                  onPressed: _logout,
-                  child: Text('Logout', style: TextStyle(fontSize: 18)),
-                  style: ElevatedButton.styleFrom(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: 40,
-                      vertical: 16,
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).push(MaterialPageRoute(builder: (_) => const MeasurementsListScreen()));
+                      },
+                      child: Text('Measurements', style: TextStyle(fontSize: 16)),
                     ),
-                    backgroundColor: Colors.red,
-                  ),
+                    SizedBox(width: 16),
+                    ElevatedButton(
+                      onPressed: _logout,
+                      child: Text('Logout', style: TextStyle(fontSize: 18)),
+                      style: ElevatedButton.styleFrom(
+                        padding: EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 12,
+                        ),
+                        backgroundColor: Colors.red,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
