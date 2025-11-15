@@ -62,7 +62,7 @@ jobs:
               volumes:
                 - ./:/app
               working_dir: /app
-              command: /bin/bash -lc "PYTHONPATH=/app pytest backend/tests/test_templates.py -q -k template_crud_flow"
+              command: /bin/bash -lc "PYTHONPATH=/app:/app/backend pytest backend/tests/test_templates.py -q -k template_crud_flow"
           YAML
 
       - name: Start services and run tests
