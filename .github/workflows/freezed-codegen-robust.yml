@@ -1,0 +1,66 @@
+name: Freezed Codegen (robust)
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches:
+      - feature/sprint4-freezed-upgrade
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    name: Generate freezed files and push (with PAT fallback)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Display Flutter version
+        run: flutter --version
+
+      - name: Install dependencies
+        working-directory: mobile-app
+        run: flutter pub get
+
+      - name: Run build_runner
+        working-directory: mobile-app
+        run: flutter pub run build_runner build --delete-conflicting-outputs
+
+      - name: Commit generated files and push (GITHUB_TOKEN then ACTIONS_PAT fallback)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No generated changes to commit"
+            exit 0
+          fi
+          git commit -m "chore(mobile): regenerate freezed files (codegen)" || true
+
+          echo "Attempting to push with default origin (GITHUB_TOKEN)..."
+          if git push origin HEAD; then
+            echo "Pushed using GITHUB_TOKEN"
+            exit 0
+          fi
+
+          echo "Default push failed. Trying ACTIONS_PAT fallback..."
+          if [ -z "${ACTIONS_PAT:-}" ]; then
+            echo "ACTIONS_PAT secret not set. Cannot push generated files."
+            exit 1
+          fi
+          REPO_URL="https://x-access-token:${ACTIONS_PAT}@github.com/${{ github.repository }}.git"
+          git remote set-url origin "$REPO_URL"
+          git push origin HEAD
