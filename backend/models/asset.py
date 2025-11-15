@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.sql import func
 
-from db.base_class import Base
+from core.database import Base
 
 
 class Asset(Base):
