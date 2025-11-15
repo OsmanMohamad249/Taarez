@@ -1,0 +1,79 @@
+name: CI - Backend Integration Tests
+
+on:
+  push:
+    branches:
+      - main
+      - 'feature/**'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  docker-tests:
+    name: Dockerized backend integration tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Docker Compose file for CI
+        run: |
+          cat > docker-compose.ci.yml <<'YAML'
+          version: "3.8"
+          services:
+            postgres:
+              image: postgres:15
+              environment:
+                POSTGRES_USER: test_user
+                POSTGRES_PASSWORD: test_password
+                POSTGRES_DB: test_db
+              ports:
+                - "5432:5432"
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U test_user"]
+                interval: 2s
+                timeout: 2s
+                retries: 30
+            redis:
+              image: redis:7
+              ports:
+                - "6379:6379"
+              healthcheck:
+                test: ["CMD", "redis-cli", "ping"]
+                interval: 2s
+                timeout: 2s
+                retries: 30
+            tester:
+              build:
+                context: .
+                dockerfile: backend/Dockerfile
+              environment:
+                DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
+                REDIS_URL: redis://redis:6379/0
+                SECRET_KEY: test_secret_key_ci_$(date +%s)
+              depends_on:
+                - postgres
+                - redis
+              volumes:
+                - ./:/app
+              working_dir: /app/backend
+              command: /bin/bash -lc "pytest tests/test_templates.py -q -k template_crud_flow"
+          YAML
+
+      - name: Start services and run tests
+        env:
+          COMPOSE_DOCKER_CLI_BUILD: 1
+          DOCKER_BUILDKIT: 1
+        run: |
+          docker compose -f docker-compose.ci.yml up --build --abort-on-container-exit --exit-code-from tester
+
+      - name: Tear down
+        if: always()
+        run: |
+          docker compose -f docker-compose.ci.yml down -v
+
