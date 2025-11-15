@@ -102,8 +102,11 @@ jobs:
       - name: Run Alembic migrations
         run: |
           set -euo pipefail
-          # Apply migrations inside the backend container so the test DB has the correct schema
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "alembic -c backend/alembic.ini upgrade head"
+          # Ensure a host-side ci-logs dir exists so we can capture Alembic output
+          mkdir -p ci-logs
+          # Run alembic inside the backend container and stream stdout/stderr to the runner
+          # Capture the output on the runner into `ci-logs/alembic.log` so it is archived.
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "cd /app/backend && alembic -c alembic.ini upgrade head" 2>&1 | tee ci-logs/alembic.log
 
       - name: Wait for backend health
         run: |
