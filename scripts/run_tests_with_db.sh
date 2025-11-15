@@ -58,8 +58,9 @@ POSTGRES_PASSWORD="test_password"
 POSTGRES_DB="test_db"
 
 if [ -f "$ENV_FILE" ]; then
+  # Export env vars from .env.test but exclude SECRET_KEY so we can generate a secure one
   # shellcheck disable=SC2046
-  export $(grep -v '^#' "$ENV_FILE" | xargs)
+  export $(grep -v '^#' "$ENV_FILE" | grep -v '^SECRET_KEY=' | xargs)
   POSTGRES_USER=${POSTGRES_USER:-$POSTGRES_USER}
   POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-$POSTGRES_PASSWORD}
   POSTGRES_DB=${POSTGRES_DB:-$POSTGRES_DB}
