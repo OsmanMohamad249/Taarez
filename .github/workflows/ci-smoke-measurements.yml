@@ -31,66 +31,71 @@ jobs:
           # Do NOT print SECRET_KEY to logs. Persist to .ci.env for docker compose interpolation.
           echo "SECRET_KEY=$SECRET_KEY" > .ci.env
 
+          # Ensure host-side ci-logs directory exists and will be mounted into containers
+          mkdir -p ci-logs
+
           # Create docker-compose.ci.yml (same layout as backend CI) so compose can be
           # validated and started in this job's workspace.
-          cat > docker-compose.ci.yml <<YAML
-            version: "3.8"
-            services:
-              postgres:
-                image: postgres:15
-                environment:
-                  POSTGRES_USER: test_user
-                  POSTGRES_PASSWORD: test_password
-                  POSTGRES_DB: test_db
-                ports:
-                  - "5432:5432"
-                healthcheck:
-                  test: ["CMD-SHELL", "pg_isready -U test_user"]
-                  interval: 2s
-                  timeout: 2s
-                  retries: 30
-              redis:
-                image: redis:7
-                ports:
-                  - "6379:6379"
-                healthcheck:
-                  test: ["CMD", "redis-cli", "ping"]
-                  interval: 2s
-                  timeout: 2s
-                  retries: 30
-              backend:
-                build:
-                  context: .
-                  dockerfile: backend/Dockerfile
-                environment:
-                  DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
-                  REDIS_URL: redis://redis:6379/0
-                  SECRET_KEY: "${SECRET_KEY}"
-                  PYTHONPATH: "/app/backend"
-                depends_on:
-                  - postgres
-                  - redis
-                ports:
-                  - "8000:8000"
-                volumes:
-                  - ./:/app
-                working_dir: /app
-                command: /bin/bash -lc "uvicorn backend.main:app --host 0.0.0.0 --port 8000"
-              tester:
-                build:
-                  context: .
-                  dockerfile: backend/Dockerfile
-                environment:
-                  - DATABASE_URL=postgresql://test_user:test_password@postgres:5432/test_db
-                  - REDIS_URL=redis://redis:6379/0
-                  - SECRET_KEY=${SECRET_KEY}
-                  - PYTHONPATH=/app:/app/backend
-                depends_on:
-                  - backend
-                volumes:
-                  - ./:/app
-                working_dir: /app
-                command: /bin/bash -lc "sleep infinity"
+          cat > docker-compose.ci.yml <<'YAML'
+          version: "3.8"
+          services:
+            postgres:
+              image: postgres:15
+              environment:
+                POSTGRES_USER: test_user
+                POSTGRES_PASSWORD: test_password
+                POSTGRES_DB: test_db
+              ports:
+                - "5432:5432"
+              healthcheck:
+                test: ["CMD-SHELL", "pg_isready -U test_user"]
+                interval: 2s
+                timeout: 2s
+                retries: 30
+            redis:
+              image: redis:7
+              ports:
+                - "6379:6379"
+              healthcheck:
+                test: ["CMD", "redis-cli", "ping"]
+                interval: 2s
+                timeout: 2s
+                retries: 30
+            backend:
+              build:
+                context: .
+                dockerfile: backend/Dockerfile
+              environment:
+                DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
+                REDIS_URL: redis://redis:6379/0
+                SECRET_KEY: "${SECRET_KEY}"
+                PYTHONPATH: "/app/backend"
+              depends_on:
+                - postgres
+                - redis
+              ports:
+                - "8000:8000"
+              volumes:
+                - ./:/app
+                - ./ci-logs:/ci-logs
+              working_dir: /app
+              command: /bin/bash -lc "uvicorn backend.main:app --host 0.0.0.0 --port 8000"
+            tester:
+              build:
+                context: .
+                dockerfile: backend/Dockerfile
+              environment:
+                - DATABASE_URL=postgresql://test_user:test_password@postgres:5432/test_db
+                - REDIS_URL=redis://redis:6379/0
+                - SECRET_KEY=${SECRET_KEY}
+                - PYTHONPATH=/app:/app/backend
+              depends_on:
+                - backend
+              volumes:
+                - ./:/app
+                - ./ci-logs:/ci-logs
+              working_dir: /app
+              command: /bin/bash -lc "sleep infinity"
           YAML
 
           # Validate docker compose interpolation before bringing services up
@@ -99,14 +104,25 @@ jobs:
           # Start services using the env-file
           docker compose --env-file .ci.env -f docker-compose.ci.yml up --build -d
 
+      - name: Wait for Postgres readiness
+        run: |
+          set -euo pipefail
+          echo "Waiting for Postgres to report ready..."
+          for i in {1..60}; do
+            docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres pg_isready -U test_user && { echo "postgres ready"; exit 0; } || true
+            sleep 1
+          done
+          echo "Postgres did not become ready"; exit 1
+
       - name: Run Alembic migrations
         run: |
           set -euo pipefail
-          # Ensure a host-side ci-logs dir exists so we can capture Alembic output
+          # Ensure a host-side ci-logs dir exists (mounted into containers)
           mkdir -p ci-logs
-          # Run alembic inside the backend container and stream stdout/stderr to the runner
-          # Capture the output on the runner into `ci-logs/alembic.log` so it is archived.
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "cd /app/backend && alembic -c alembic.ini upgrade head" 2>&1 | tee ci-logs/alembic.log
+          # Run alembic inside the backend container and have it write its log to the mounted /ci-logs
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "cd /app/backend && alembic -c alembic.ini upgrade head > /ci-logs/alembic.log 2>&1"
+          # Also print the alembic log to the runner so the job output contains the migration trace
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "cat /ci-logs/alembic.log" || true
 
       - name: Wait for backend health
         run: |
@@ -220,6 +236,9 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ci-logs || true
+          echo "ci-logs contents on runner before collecting:"
+          ls -lah ci-logs || true
+          if [ -f ci-logs/alembic.log ]; then echo "alembic.log present"; else echo "alembic.log missing"; fi
           # collect compose logs (no-color), ps and top for debugging
           docker compose --env-file .ci.env -f docker-compose.ci.yml logs --no-color > ci-logs/compose.log 2>&1 || true
           docker compose --env-file .ci.env -f docker-compose.ci.yml ps -a > ci-logs/ps.txt 2>&1 || true
@@ -228,6 +247,7 @@ jobs:
           docker compose --env-file .ci.env -f docker-compose.ci.yml logs backend --no-color > ci-logs/backend.log 2>&1 || true
           docker compose --env-file .ci.env -f docker-compose.ci.yml logs tester --no-color > ci-logs/tester.log 2>&1 || true
           tar -czf ci-logs.tar.gz ci-logs || true
+          echo "created archive:" && ls -lah ci-logs.tar.gz || true
 
       - name: Upload logs artifact
         if: always()

@@ -32,10 +32,38 @@ def create_app(config_name='development'):
     from app import commands
     commands.register_commands(app)
     
-    # Create database tables in non-production environments only.
+    # Create or migrate database schema in non-production environments only.
     # Production schema changes must be applied via Alembic migrations.
     if config_name != 'production':
         with app.app_context():
-            db.create_all()
+            # Prefer running Alembic migrations if an alembic.ini is available.
+            try:
+                import os
+                from alembic.config import Config
+                from alembic import command
+
+                # Look for alembic.ini in a couple of likely locations
+                cand_paths = [
+                    os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'alembic.ini')),
+                    os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'backend', 'alembic.ini')),
+                    os.path.abspath(os.path.join(os.getcwd(), 'alembic.ini')),
+                ]
+                alembic_ini = None
+                for p in cand_paths:
+                    if os.path.exists(p):
+                        alembic_ini = p
+                        break
+
+                if alembic_ini:
+                    cfg = Config(alembic_ini)
+                    command.upgrade(cfg, 'head')
+                else:
+                    # Fail fast: do not silently fall back to SQLAlchemy create_all()
+                    raise RuntimeError(
+                        'alembic.ini not found; migrations must be applied via Alembic instead of create_all()'
+                    )
+            except Exception:
+                # Surface the underlying error so it can be fixed explicitly.
+                raise
     
     return app
