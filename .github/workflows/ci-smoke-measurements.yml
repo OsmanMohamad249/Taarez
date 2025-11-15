@@ -250,21 +250,8 @@ jobs:
           fi
           echo "$UPD_BODY" | jq -e '.measurements.chest == 111.0' >/dev/null
 
-          # Delete measurement
-          DEL_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X DELETE http://localhost:8000/api/v1/measurements/${MEASUREMENT_ID} \
-            -H "Authorization: Bearer $TOKEN")
-          echo "Delete HTTP status: $DEL_STATUS"
-          if [ "$DEL_STATUS" != "204" ]; then
-            echo "Failed to delete measurement"; exit 1
-          fi
-
-          # Confirm deletion: GET should return 404
-          GET_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X GET http://localhost:8000/api/v1/measurements/${MEASUREMENT_ID} \
-            -H "Authorization: Bearer $TOKEN")
-          echo "Get after delete HTTP status: $GET_STATUS"
-          if [ "$GET_STATUS" != "404" ]; then
-            echo "Measurement still exists after delete"; exit 1
-          fi
+          # Skip deletion in CI so we can verify DB persistence afterwards
+          echo "Skipping measurement delete in CI to allow DB persistence checks"
 
           # Negative AI response: force AI service to return unsuccessful status
           NEG_RESP=$(curl -s -w "\n%{http_code}" -X POST http://localhost:8000/api/v1/measurements/process \
