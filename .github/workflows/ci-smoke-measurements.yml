@@ -21,11 +21,21 @@ jobs:
           sudo apt-get install -y jq curl
 
       - name: Start Docker Compose services
-        env:
-          SECRET_KEY: ${{ secrets.CI_SECRET_KEY }}
         run: |
-          export SECRET_KEY="$SECRET_KEY"
-          docker compose up --build -d
+          set -euo pipefail
+          # Generate a strong SECRET_KEY if not provided via repository secret
+          SECRET_KEY="${{ secrets.CI_SECRET_KEY }}"
+          if [ -z "$SECRET_KEY" ]; then
+            SECRET_KEY=$(openssl rand -hex 32)
+          fi
+          # Do NOT print SECRET_KEY to logs. Persist to .ci.env for docker compose interpolation.
+          echo "SECRET_KEY=$SECRET_KEY" > .ci.env
+
+          # Validate docker compose interpolation before bringing services up
+          docker compose --env-file .ci.env config -f docker-compose.ci.yml
+
+          # Start services using the env-file
+          docker compose --env-file .ci.env -f docker-compose.ci.yml up --build -d
 
       - name: Wait for backend health
         run: |
@@ -135,4 +145,10 @@ jobs:
       - name: Tear down compose services
         if: always()
         run: |
-          docker compose down -v
+          set -euo pipefail
+          if [ -f .ci.env ]; then
+            docker compose --env-file .ci.env -f docker-compose.ci.yml down -v || true
+            rm -f .ci.env || true
+          else
+            docker compose down -v || true
+          fi
