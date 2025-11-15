@@ -118,9 +118,28 @@ jobs:
         run: |
           set -euo pipefail
           echo "Creating/altering alembic_version table to ensure version_num VARCHAR(255) (run as postgres superuser)"
-          # Use the postgres superuser to ensure we have permission to ALTER the table
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U postgres -d test_db -v ON_ERROR_STOP=1 -c \"CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(255) NOT NULL PRIMARY KEY);\""
-          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres bash -lc "psql -U postgres -d test_db -v ON_ERROR_STOP=1 -c \"ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);\"" || true
+          mkdir -p ci-logs || true
+          # Create a small idempotent SQL script and feed it to psql inside the postgres container.
+          cat > /tmp/alembic_init.sql <<'SQL'
+          CREATE TABLE IF NOT EXISTS alembic_version (version_num VARCHAR(255) NOT NULL PRIMARY KEY);
+          DO $$
+          BEGIN
+            IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name='alembic_version' AND column_name='version_num') THEN
+              ALTER TABLE alembic_version ALTER COLUMN version_num TYPE VARCHAR(255);
+            END IF;
+            IF NOT EXISTS (SELECT 1 FROM alembic_version) THEN
+              INSERT INTO alembic_version (version_num) VALUES ('init');
+            END IF;
+          END
+          $$;
+          SQL
+
+          # Feed the SQL into psql running in the postgres container and capture the output to host-side ci-logs
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U postgres -d test_db -v ON_ERROR_STOP=1 -f - < /tmp/alembic_init.sql > ci-logs/alembic-init.log 2>&1 || true
+
+          # Dump verification info so CI artifacts show the column type and any rows present
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U postgres -d test_db -c "SELECT column_name, data_type, character_maximum_length FROM information_schema.columns WHERE table_name='alembic_version' AND column_name='version_num';" > ci-logs/alembic-pre-init-schema.log 2>&1 || true
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U postgres -d test_db -c "SELECT * FROM alembic_version;" > ci-logs/alembic-pre-init-rows.log 2>&1 || true
 
       - name: Start backend and tester
         run: |
