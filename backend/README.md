@@ -134,6 +134,23 @@ docker run -d --name qeyafa-test-db \
 
 # Or use docker-compose
 docker-compose up -d postgres
+
+### Developer helper: run tests with ephemeral Postgres
+
+To make it easy to run the full test suite (including Alembic-based migrations) locally, there's a helper script at the repository root:
+
+```bash
+# from repository root
+scripts/run_tests_with_db.sh
+# pass extra pytest args if desired
+scripts/run_tests_with_db.sh backend/tests/test_smoke_measurements.py::test_measurements_smoke_flow
+```
+
+This script:
+- Starts a temporary Postgres container bound to `localhost:5432` using credentials from `backend/tests/.env.test` (defaults are `test_user/test_password/test_db`).
+- Waits for the database to be ready, runs `pytest` with `PYTHONPATH=backend`, then cleans up the container.
+
+Note: if you already have a Postgres instance on `localhost:5432`, stop it before running the helper script to avoid port conflicts.
 ```
 
 ## Configuration Validation & Error Messages
