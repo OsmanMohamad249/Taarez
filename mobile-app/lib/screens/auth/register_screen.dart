@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../features/auth/presentation/auth_provider.dart';
-import '../../features/auth/domain/auth_state.dart';
 
 class RegisterScreen extends ConsumerStatefulWidget {
   @override

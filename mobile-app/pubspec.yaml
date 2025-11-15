@@ -19,6 +19,7 @@ dependencies:
   dartz: ^0.10.1                   # Functional programming
   intl: ^0.18.1                    # Internationalization
   freezed_annotation: ^2.2.0       # Freezed annotations for code generation
+  file_picker: ^5.2.2             # Pick images/files for upload
 
 dev_dependencies:
   flutter_test:

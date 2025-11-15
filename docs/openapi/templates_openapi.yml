@@ -1,0 +1,138 @@
+openapi: 3.0.0
+info:
+  title: Qeyafa Design Studio API (partial)
+  version: 0.1.0
+
+paths:
+  /api/v1/templates:
+    get:
+      summary: List templates
+      responses:
+        '200':
+          description: A list of templates
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Template'
+    post:
+      summary: Create a template
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreate'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+
+  /api/v1/templates/{templateId}:
+    get:
+      summary: Get a template
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Template
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+    put:
+      summary: Update a template
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TemplateCreate'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Template'
+    delete:
+      summary: Delete a template
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '204':
+          description: Deleted
+
+  /api/v1/templates/{templateId}/preview:
+    post:
+      summary: Render a template preview with measurement data
+      parameters:
+        - name: templateId
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                measurements:
+                  type: object
+      responses:
+        '200':
+          description: Rendered preview (could be HTML, SVG or image URL)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  preview_url:
+                    type: string
+
+components:
+  schemas:
+    Template:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        payload:
+          type: object
+
+    TemplateCreate:
+      type: object
+      required:
+        - name
+        - payload
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        payload:
+          type: object
