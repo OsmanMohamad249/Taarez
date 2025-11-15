@@ -154,6 +154,13 @@ jobs:
           # Also print the alembic log to the runner so the job output contains the migration trace
           docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "cat /ci-logs/alembic.log" || true
 
+      - name: Dump users table after migrations (for debugging)
+        run: |
+          set -euo pipefail
+          mkdir -p ci-logs || true
+          echo "Dumping users table to ci-logs/users-after-migrations.log"
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T postgres psql -U test_user -d test_db -c "SELECT email, hashed_password, is_active, is_superuser, role FROM users;" > ci-logs/users-after-migrations.log 2>&1 || true
+
       - name: Wait for backend health
         run: |
           echo "Waiting for backend /health..."
