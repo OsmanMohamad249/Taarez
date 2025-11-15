@@ -70,6 +70,11 @@ echo "Using Postgres container: $CONTAINER_NAME"
 function cleanup() {
   echo "Cleaning up Postgres container..."
   docker rm -f "$CONTAINER_NAME" >/dev/null 2>&1 || true
+  # Restore .env.test if we backed it up
+  if [ -f "${ENV_FILE}.bak" ]; then
+    echo "Restoring original ${ENV_FILE}"
+    mv -f "${ENV_FILE}.bak" "${ENV_FILE}" || true
+  fi
 }
 
 trap cleanup EXIT
@@ -130,6 +135,19 @@ print(secrets.token_urlsafe(48))
 PY
 )
   export SECRET_KEY
+fi
+
+# If the tests .env file exists, ensure it contains the SECRET_KEY value we will use
+if [ -f "$ENV_FILE" ]; then
+  echo "Backing up original $ENV_FILE to ${ENV_FILE}.bak and writing SECRET_KEY"
+  cp "$ENV_FILE" "${ENV_FILE}.bak"
+  # Write out new .env.test with same content but replace or append SECRET_KEY
+  if grep -q '^SECRET_KEY=' "$ENV_FILE"; then
+    sed -E "s/^SECRET_KEY=.*/SECRET_KEY=${SECRET_KEY}/" "${ENV_FILE}.bak" > "$ENV_FILE"
+  else
+    cat "${ENV_FILE}.bak" > "$ENV_FILE"
+    echo "SECRET_KEY=${SECRET_KEY}" >> "$ENV_FILE"
+  fi
 fi
 # Run tests (adjust pytest args as needed)
 PYTHONPATH=backend pytest -q "$@"
