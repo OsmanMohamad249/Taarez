@@ -105,7 +105,7 @@ else
   -e POSTGRES_DB="$POSTGRES_DB" \
   -p ${HOST_PORT}:5432 \
   $POSTGRES_IMAGE >/dev/null
-
+  fi
 echo "Waiting for Postgres to be ready..."
 RETRIES=0
 MAX_RETRIES=60
