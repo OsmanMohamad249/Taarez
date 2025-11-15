@@ -66,6 +66,9 @@ jobs:
                   DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
                   REDIS_URL: redis://redis:6379/0
                   SECRET_KEY: "${SECRET_KEY}"
+                # Ensure backend package imports resolve when running in container
+                environment:
+                  PYTHONPATH: "/app/backend"
                 depends_on:
                   - postgres
                   - redis
@@ -83,6 +86,9 @@ jobs:
                   DATABASE_URL: postgresql://test_user:test_password@postgres:5432/test_db
                   REDIS_URL: redis://redis:6379/0
                   SECRET_KEY: "${SECRET_KEY}"
+                # Ensure tester uses backend package imports
+                environment:
+                  PYTHONPATH: "/app/backend"
                 depends_on:
                   - backend
                 volumes:
