@@ -1,0 +1,42 @@
+name: Flutter analyze (mobile-app)
+
+on:
+  workflow_dispatch: {}
+  push:
+    paths:
+      - 'mobile-app/**'
+  pull_request:
+    paths:
+      - 'mobile-app/**'
+
+jobs:
+  analyze:
+    name: Analyze Flutter mobile app
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+
+      - name: Cache pub
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pub-cache
+            mobile-app/.dart_tool
+          key: ${{ runner.os }}-pub-${{ hashFiles('mobile-app/pubspec.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pub-
+
+      - name: Install dependencies
+        run: |
+          cd mobile-app
+          flutter pub get
+
+      - name: Analyze
+        run: |
+          cd mobile-app
+          # Only treat warnings as fatal to avoid failing on info-style suggestions
+          flutter analyze --fatal-warnings

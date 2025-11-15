@@ -66,7 +66,7 @@ class DesignCard extends StatelessWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    design.styleType,
+                    design.styleType ?? '',
                     style: TextStyle(
                       color: Colors.grey[600],
                       fontSize: 12,

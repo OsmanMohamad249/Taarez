@@ -2,7 +2,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'auth_provider.dart';
-import '../domain/auth_state.dart';
 import 'login_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
