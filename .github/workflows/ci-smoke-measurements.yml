@@ -99,6 +99,12 @@ jobs:
           # Start services using the env-file
           docker compose --env-file .ci.env -f docker-compose.ci.yml up --build -d
 
+      - name: Run Alembic migrations
+        run: |
+          set -euo pipefail
+          # Apply migrations inside the backend container so the test DB has the correct schema
+          docker compose --env-file .ci.env -f docker-compose.ci.yml exec -T backend bash -lc "alembic -c backend/alembic.ini upgrade head"
+
       - name: Wait for backend health
         run: |
           echo "Waiting for backend /health..."
